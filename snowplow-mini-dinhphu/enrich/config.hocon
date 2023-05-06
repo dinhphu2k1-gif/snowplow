@@ -1,0 +1,18 @@
+{
+  "input": {
+    "topicName": "good"
+    "bootstrapServers": "192.168.19.179:29092,192.168.19.179:29093"
+  }
+
+  "output": {
+    "good": {
+      "topicName": "enriched"
+      "bootstrapServers": "192.168.19.179:29092,192.168.19.179:29093"
+    }
+
+    "bad": {
+      "topicName": "bad"
+      "bootstrapServers": "192.168.19.179:29092,192.168.19.179:29093"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+java -jar iglu-server-0.10.0.jar --config config.hocon

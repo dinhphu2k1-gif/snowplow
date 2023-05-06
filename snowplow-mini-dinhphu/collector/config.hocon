@@ -1,0 +1,13 @@
+collector {
+  interface = "0.0.0.0"
+  port = 8080
+
+  streams {
+    good = "good"
+    bad = "bad"
+
+    sink {
+      brokers = "192.168.19.179:29092,192.168.19.179:29093"
+    }
+  }
+}
