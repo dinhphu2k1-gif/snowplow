@@ -7,7 +7,7 @@ collector {
     bad = "bad"
 
     sink {
-      brokers = "localhost:9092,another.host:9092"
+      brokers = "localhost:29092,localhost:29093"
     }
   }
 }

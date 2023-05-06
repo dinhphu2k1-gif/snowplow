@@ -1,0 +1,1 @@
+java -jar snowplow-stream-collector-kafka-2.9.0.jar --config config.minimal.hocon

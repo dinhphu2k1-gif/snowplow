@@ -1,0 +1,18 @@
+{
+  "input": {
+    "topicName": "good"
+    "bootstrapServers": "localhost:29092,localhost:29093"
+  }
+
+  "output": {
+    "good": {
+      "topicName": "enriched"
+      "bootstrapServers": "localhost:29092,localhost:29093"
+    }
+
+    "bad": {
+      "topicName": "bad"
+      "bootstrapServers": "localhost:29092,localhost:29093"
+    }
+  }
+}

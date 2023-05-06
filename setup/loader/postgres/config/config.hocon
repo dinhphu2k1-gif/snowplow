@@ -1,0 +1,22 @@
+{
+  "input": {
+    "type": "Kafka"
+    "topicName": "enriched"
+    "bootstrapServers": "localhost:29092,localhost:29093"
+    "consumerConf": {
+      "enable.auto.commit": "false"
+      "auto.offset.reset" : "latest"
+    }
+  }
+  
+  "output" : {
+    "good": {
+      "type": "Postgres"
+      "host": "localhost"
+      "database": "snowplow"
+      "username": "postgres"
+      "password": 12012001
+      "schema": "atomic"
+    }
+  }
+}

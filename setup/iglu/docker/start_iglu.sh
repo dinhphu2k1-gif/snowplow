@@ -1,0 +1,1 @@
+docker run -v ./config/config.minimal.hocon:/iglu/config.hocon -p 8181:8080 --name igluserver snowplow/iglu-server:0.9.1 --config /iglu/config.hocon

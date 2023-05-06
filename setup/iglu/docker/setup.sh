@@ -1,0 +1,1 @@
+docker run --rm -v ./config/config.minimal.hocon:/iglu/config.hocon snowplow/iglu-server:0.9.1 setup --config /iglu/config.hocon
