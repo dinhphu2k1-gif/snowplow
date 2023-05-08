@@ -30,3 +30,6 @@ Server chạy ở port `8080`
 ### 2.2. [Enrich](https://docs.snowplow.io/docs/pipeline-components-and-applications/enrichment-components/enrich-kafka/)
 
 Start enrich ```bash collector/java-iglu.sh```
+
+## 3. Note
+Các file `config.hocon` trong collector, iglu và enrich cần thay địa chỉ ip của máy mình mới chạy đc nhé
