@@ -30,7 +30,7 @@ public class CollectEvent {
         consumer.subscribe(Collections.singletonList("enriched"));
 
         while (true) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(10));
             for (ConsumerRecord<String, String> record : records) {
                 System.out.println(record.value());
             }
