@@ -8,7 +8,7 @@ public class Event {
     private String etl_tstamp;
     private String collector_tstamp;
     private String dvce_created_tstamp;
-    private String event;
+    private String event_name;
     private UUID event_id;
     private String name_tracker;
     private String v_tracker;
