@@ -25,7 +25,7 @@ Server chạy ở port `8080`
 ### 2.2. [Iglu](https://docs.snowplow.io/docs/pipeline-components-and-applications/iglu/iglu-repositories/iglu-server/setup/)
 
 Start iglu ```bash collector/java-iglu.sh```
-Server chạy ở port `8080`
+Server chạy ở port `8081`
 
 ### 2.2. [Enrich](https://docs.snowplow.io/docs/pipeline-components-and-applications/enrichment-components/enrich-kafka/)
 
