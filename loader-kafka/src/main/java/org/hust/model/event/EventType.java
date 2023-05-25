@@ -1,9 +1,9 @@
-package org.hust.event;
+package org.hust.model.event;
 
 /**
  * Tên các sự kiện xảy ra
  */
-public class EventName {
+public class EventType {
     /**
      * Theo dõi số lần xem trang, được sử dụng để ghi lại số lần xem các trang web.
      */
