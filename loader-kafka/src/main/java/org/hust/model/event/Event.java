@@ -2,6 +2,7 @@ package org.hust.model.event;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.json.JSONObject;
 
 import java.sql.Timestamp;
 
@@ -226,7 +227,7 @@ public class Event {
     private String mkt_campaign;
     private String mkt_clickid;
     private String mkt_network;
-    private String contexts;
+    private JSONObject contexts;
 
     //Browser fields
     /**
@@ -299,7 +300,7 @@ public class Event {
     private String se_label;
     private String se_property;
     private String se_value;
-    private String unstruct_event;
+    private JSONObject unstruct_event;
 
     //E-commerce transactions
     /**
@@ -452,13 +453,13 @@ public class Event {
         mkt_term = propertyIndex[49];
         mkt_content = propertyIndex[50];
         mkt_campaign = propertyIndex[51];
-        contexts = propertyIndex[52];
+        contexts = new JSONObject(propertyIndex[52]);
         se_category = propertyIndex[53];
         se_action = propertyIndex[54];
         se_label = propertyIndex[55];
         se_property = propertyIndex[56];
         se_value = propertyIndex[57];
-        unstruct_event = propertyIndex[58];
+        unstruct_event = new JSONObject(propertyIndex[58]);
         tr_orderid = propertyIndex[59];
         tr_affiliation = propertyIndex[60];
         try {

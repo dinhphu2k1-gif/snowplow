@@ -7,6 +7,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.hust.model.entity.IContext;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
+import org.hust.model.event.unstruct.IUnstructEvent;
 import org.hust.storage.elasticsearch.ElasticsearchClient;
 
 import java.time.Duration;
@@ -48,7 +49,8 @@ public class CollectEvent {
 
                 switch (event.getEvent()) {
                     case EventType.UNSTRUCT: {
-
+                        IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
+                        
                     }
                     break;
                 }
