@@ -31,4 +31,7 @@ Server chạy ở port `8081`
 
 Start enrich ```bash collector/java-iglu.sh```
 
-## 3. Note
+## 3. Storage
+
+### 3.1. Elasticsearch
+Các sự kiện được sử dụng sẽ được lưu trong elasticsearch để thuận tiện trong việc truy vấn. Chủ yếu là query theo `user_id`
