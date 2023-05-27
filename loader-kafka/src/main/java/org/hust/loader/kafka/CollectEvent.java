@@ -4,6 +4,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.hust.loader.kafka.elasticsearch.IUnstructDocument;
+import org.hust.loader.kafka.elasticsearch.InsertDocument;
 import org.hust.model.entity.IContext;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
@@ -45,12 +47,10 @@ public class CollectEvent {
                 System.out.println(value);
                 Event event = new Event(value);
 
-                List<IContext> contextList = IContext.createContext(event);
-
                 switch (event.getEvent()) {
                     case EventType.UNSTRUCT: {
-                        IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
-                        
+                        List<IUnstructDocument> unstructDocumentList = IUnstructDocument.createDocument(event);
+                        InsertDocument.insertDocument(unstructDocumentList);
                     }
                     break;
                 }

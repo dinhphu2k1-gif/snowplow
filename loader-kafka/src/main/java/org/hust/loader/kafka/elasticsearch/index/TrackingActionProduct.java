@@ -1,9 +1,19 @@
 package org.hust.loader.kafka.elasticsearch.index;
 
+import com.google.gson.Gson;
+import org.hust.loader.kafka.elasticsearch.IUnstructDocument;
+import org.hust.model.entity.impl.ProductContext;
+import org.hust.model.entity.impl.UserContext;
+import org.hust.model.event.Event;
+import org.hust.model.event.unstruct.impl.ProductAction;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Lưu lại cac sự kiện xảy ra với sản phẩm
  */
-public class TrackingActionProduct {
+public class TrackingActionProduct implements IUnstructDocument {
     /**
      * Thời gian xảy ra sự kiện. VD 1684418681417
      */
@@ -29,11 +39,27 @@ public class TrackingActionProduct {
      */
     private String action;
     /**
+     * Chứa thông tin thêm về action
+     */
+    private String extra;
+    /**
      * Sản phẩm liên quan đến sự kiện
      */
-    private String product;
+    private ProductContext product;
 
+    public TrackingActionProduct(Event event, ProductContext productContext, UserContext userContext, ProductAction productAction) {
+        time = event.getDvce_created_tstamp();
+        date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(time));
+        event_id = event.getEvent_id();
+        user_id = userContext.getUser_id();
+        domain_userid = event.getDomain_userid();
+        action = productAction.getAction();
+        product = productContext;
+    }
 
-
-
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 }
