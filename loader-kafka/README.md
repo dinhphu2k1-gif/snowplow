@@ -4,4 +4,5 @@ Sau khi chạy hết các thành phần trước. Chạy file [CollectEvent](/sr
 
 Sau đó vào Kibana để kiểm tra xem dữ liệu đã lên hay chưa
 
-![image](https://github.com/dinhphu2k1-gif/snowplow/assets/81508954/8fda470f-1992-4c4d-b5fd-786bba1aeed8)
+![image](https://github.com/dinhphu2k1-gif/snowplow/assets/81508954/c6f73bb4-c8a8-45d9-b711-2a26b83b333a)
+
