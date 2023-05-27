@@ -32,4 +32,3 @@ Server chạy ở port `8081`
 Start enrich ```bash collector/java-iglu.sh```
 
 ## 3. Note
-Các file `config.hocon` trong collector, iglu và enrich cần thay địa chỉ ip của máy mình mới chạy đc nhé
