@@ -3,14 +3,10 @@ package org.hust.loader.kafka;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.hust.loader.kafka.elasticsearch.IUnstructDocument;
 import org.hust.loader.kafka.elasticsearch.InsertDocument;
-import org.hust.model.entity.IContext;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
-import org.hust.model.event.unstruct.IUnstructEvent;
-import org.hust.storage.elasticsearch.ElasticsearchClient;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -22,7 +18,6 @@ import java.util.Properties;
  */
 public class CollectEvent {
     private final KafkaConsumer<String, String> consumer;
-    private final RestHighLevelClient esClient;
 
     public CollectEvent() {
         Properties props = new Properties();
@@ -34,7 +29,6 @@ public class CollectEvent {
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
         consumer = new KafkaConsumer<>(props);
-        esClient = ElasticsearchClient.getEsClient();
     }
 
     public void run() {

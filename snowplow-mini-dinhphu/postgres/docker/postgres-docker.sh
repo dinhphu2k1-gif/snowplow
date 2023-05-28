@@ -1,1 +1,1 @@
-docker run --name postgresdb -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+docker run --name postgresdb -p 5432:5432 -e POSTGRES_PASSWORD=snowplow -e POSTGRES_DB=igludb -d postgres
