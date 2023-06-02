@@ -9,6 +9,7 @@ import org.hust.model.event.unstruct.impl.ProductAction;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Lưu lại cac sự kiện xảy ra với sản phẩm
@@ -45,15 +46,16 @@ public class TrackingActionProduct implements IUnstructDocument {
     /**
      * Sản phẩm liên quan đến sự kiện
      */
-    private ProductContext product;
+    private List<ProductContext> product;
 
-    public TrackingActionProduct(Event event, ProductContext productContext, UserContext userContext, ProductAction productAction) {
-        time = event.getDvce_created_tstamp();
+    public TrackingActionProduct(Event event, List<ProductContext> productContext, UserContext userContext, ProductAction productAction) {
+        time = event.getDvce_created_tstamp() + 25200 * 1000;
         date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(time));
         event_id = event.getEvent_id();
         user_id = userContext.getUser_id();
         domain_userid = event.getDomain_userid();
         action = productAction.getAction();
+        extra = productAction.getExtra();
         product = productContext;
     }
 

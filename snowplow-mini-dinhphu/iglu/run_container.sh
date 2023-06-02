@@ -1,0 +1,1 @@
+docker run -d -it --name iglu -p 8181:8181 --network snowplow dinhphu/snowplow-iglu

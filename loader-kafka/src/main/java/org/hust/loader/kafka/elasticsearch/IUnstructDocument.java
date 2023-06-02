@@ -17,7 +17,7 @@ import java.util.List;
  * Các document được tạo từ các unstruct event
  */
 public interface IUnstructDocument {
-    static List<IUnstructDocument> createDocument(Event event) {
+    static IUnstructDocument createDocument(Event event) {
         List<IContext> contextList = IContext.createContext(event);
         IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
 
@@ -27,23 +27,19 @@ public interface IUnstructDocument {
         for (IContext context : contextList) {
             if (context instanceof ProductContext) {
                 ProductContext productContext = (ProductContext) context;
-                productContextList .add(productContext);
+                productContextList.add(productContext);
             } else if (context instanceof UserContext) {
                 userContext = (UserContext) context;
             }
         }
 
-        List<IUnstructDocument> unstructDocumentList = new ArrayList<>();
+        IUnstructDocument unstructDocument = null;
         if (unstructEvent instanceof ProductAction) {
-            for (ProductContext productContext : productContextList) {
-                IUnstructDocument unstructDocument = new TrackingActionProduct(event, productContext, userContext, (ProductAction) unstructEvent);
-                unstructDocumentList.add(unstructDocument);
-            }
+            unstructDocument = new TrackingActionProduct(event, productContextList, userContext, (ProductAction) unstructEvent);
         } else if (unstructEvent instanceof SearchAction) {
-            IUnstructDocument unstructDocument = new TrackingActionSearch(event, userContext,(SearchAction) unstructEvent);
-            unstructDocumentList.add(unstructDocument);
+            unstructDocument = new TrackingActionSearch(event, userContext, (SearchAction) unstructEvent);
         }
 
-        return unstructDocumentList;
+        return unstructDocument;
     }
 }

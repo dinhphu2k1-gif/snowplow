@@ -3,6 +3,7 @@ package org.hust.storage.elasticsearch;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.hust.config.ConfigInfo;
 
 import java.io.IOException;
 
@@ -18,9 +19,7 @@ public class ElasticsearchClient {
                 if (esClient == null) {
                     esClient = new RestHighLevelClient(
                             RestClient.builder(
-                                    new HttpHost("localhost", 9200, "http"),
-                                    new HttpHost("localhost", 9201, "http"),
-                                    new HttpHost("localhost", 9202, "http")
+                                    ConfigInfo.Elasticsearch.ES_HOST
                             ));
                 }
             }

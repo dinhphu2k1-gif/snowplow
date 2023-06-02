@@ -3,6 +3,7 @@ package org.hust.loader.kafka;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.hust.config.ConfigInfo;
 import org.hust.loader.kafka.elasticsearch.IUnstructDocument;
 import org.hust.loader.kafka.elasticsearch.InsertDocument;
 import org.hust.model.event.Event;
@@ -10,7 +11,6 @@ import org.hust.model.event.EventType;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
 /**
@@ -21,7 +21,7 @@ public class CollectEvent {
 
     public CollectEvent() {
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:29092,localhost:29093");
+        props.put("bootstrap.servers", ConfigInfo.Kafka.KAFKA_HOST);
         props.put("group.id", "snowplow1");
         props.put("enable.auto.commit", "false");
         props.put("auto.offset.reset", "latest");
@@ -43,8 +43,8 @@ public class CollectEvent {
 
                 switch (event.getEvent()) {
                     case EventType.UNSTRUCT: {
-                        List<IUnstructDocument> unstructDocumentList = IUnstructDocument.createDocument(event);
-                        InsertDocument.insertDocument(unstructDocumentList);
+                        IUnstructDocument unstructDocument = IUnstructDocument.createDocument(event);
+                        InsertDocument.insertDocument(unstructDocument);
                     }
                     break;
                 }

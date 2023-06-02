@@ -45,7 +45,7 @@ public class TrackingActionSearch implements IUnstructDocument {
     private String search_value;
 
     public TrackingActionSearch(Event event, UserContext userContext, SearchAction searchAction) {
-        time = event.getDvce_created_tstamp();
+        time = event.getDvce_created_tstamp() + 25200 * 1000;
         date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(time));
         event_id = event.getEvent_id();
         user_id = userContext.getUser_id();

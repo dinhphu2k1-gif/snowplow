@@ -17,32 +17,30 @@ import java.util.List;
 public class InsertDocument {
     private final static RestHighLevelClient esClient = ElasticsearchClient.getEsClient();
 
-    public static void insertDocument(List<IUnstructDocument> unstructDocumentList) {
-        for (IUnstructDocument unstructDocument : unstructDocumentList) {
-            IndexRequest request = null;
+    public static void insertDocument(IUnstructDocument unstructDocument) {
+        if (unstructDocument == null) return;
 
-            if (unstructDocument instanceof TrackingActionProduct) {
-                TrackingActionProduct document = (TrackingActionProduct) unstructDocument;
-                System.out.println(document.toString());
+        IndexRequest request = null;
 
-                request = new IndexRequest(IndexName.TRACKING_ACTION_PRODUCT);
-                request.source(document.toString(), XContentType.JSON);
-                System.out.println("insert action product!!");
-            } else if (unstructDocument instanceof TrackingActionSearch) {
-                TrackingActionSearch document = (TrackingActionSearch) unstructDocument;
-                System.out.println(document.toString());
+        if (unstructDocument instanceof TrackingActionProduct) {
+            TrackingActionProduct document = (TrackingActionProduct) unstructDocument;
+            System.out.println(document.toString());
 
-                request = new IndexRequest(IndexName.TRACKING_ACTION_SEARCH);
-                request.source(document.toString(), XContentType.JSON);
-                System.out.println("insert action search!!");
-            }
+            request = new IndexRequest(IndexName.TRACKING_ACTION_PRODUCT);
+            request.source(document.toString(), XContentType.JSON);
+            System.out.println("insert action product!!");
+        } else if (unstructDocument instanceof TrackingActionSearch) {
+            TrackingActionSearch document = (TrackingActionSearch) unstructDocument;
+            System.out.println(document.toString());
 
-            try {
-                esClient.index(request, RequestOptions.DEFAULT);
-            } catch (IOException ignore) {
-            }
+            request = new IndexRequest(IndexName.TRACKING_ACTION_SEARCH);
+            request.source(document.toString(), XContentType.JSON);
+            System.out.println("insert action search!!");
         }
 
-
+        try {
+            esClient.index(request, RequestOptions.DEFAULT);
+        } catch (IOException ignore) {
+        }
     }
 }

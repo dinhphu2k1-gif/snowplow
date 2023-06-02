@@ -1,0 +1,1 @@
+docker run -d -it --name collector -p 8080:8080 --network snowplow dinhphu/snowplow-collector

@@ -1,18 +1,18 @@
 {
   "input": {
     "topicName": "good"
-    "bootstrapServers": "0.0.0.0:29092,0.0.0.0:29093,0.0.0.0:29094"
+    "bootstrapServers": "kafka1:9092,kafka2:9093,kafka3:9094"
   }
 
   "output": {
     "good": {
       "topicName": "enriched"
-      "bootstrapServers": "0.0.0.0:29092,0.0.0.0:29093,0.0.0.0:29094"
+      "bootstrapServers": "kafka1:9092,kafka2:9093,kafka3:9094"
     }
 
     "bad": {
       "topicName": "bad"
-      "bootstrapServers": "0.0.0.0:29092,0.0.0.0:29093,0.0.0.0:29094"
+      "bootstrapServers": "kafka1:9092,kafka2:9093,kafka3:9094"
     }
   }
 }
