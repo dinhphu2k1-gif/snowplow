@@ -1,0 +1,293 @@
+services:
+
+# book-shop
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - snowplow
+
+  bookshop-backend:
+    image: dinhphu/bookshop-be
+    container_name: bookshop-backend
+    restart: always
+    environment:
+      - DB_HOST=mongodb
+    depends_on:
+      - mongodb
+    ports:
+      - 10000:10000
+    networks:
+      - snowplow
+
+  bookshop-frontend:
+    image: dinhphu/bookshop-fe
+    container_name: bookshop-frontend
+    restart: always
+    environment:
+      - BACKEND_HOST=backend
+      - COLLECTOR_HOST=collector
+    depends_on:
+      - bookshop-backend
+    ports:
+      - 3000:3000
+    networks:
+      - snowplow
+
+  bookshop-admin:
+    image: dinhphu/bookshop-admin
+    container_name: bookshop-admin
+    restart: always
+    environment:
+      - BACKEND_HOST=backend
+    depends_on:
+      - bookshop-backend
+    ports:
+      - 3001:3001
+    networks:
+      - snowplow
+
+# các phần phụ trợ liên quan
+  postgresdb:
+    image: dinhphu/iglu-postgres
+    container_name: postgresdb
+    restart: always
+    ports:
+      - 5432:5432
+    networks:
+      - snowplow
+
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - snowplow
+  
+  kafka1:
+    container_name: kafka1
+    image: confluentinc/cp-kafka:latest
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    networks:
+      - snowplow
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+
+  kafka2:
+    container_name: kafka2
+    image: confluentinc/cp-kafka:latest
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - 29093:29093
+    networks:
+      - snowplow
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093,PLAINTEXT_HOST://localhost:29093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+
+  kafka3:
+    container_name: kafka3
+    image: confluentinc/cp-kafka:latest
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - 29094:29094
+    networks:
+      - snowplow
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094,PLAINTEXT_HOST://localhost:29094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
+    container_name: elasticsearch1
+    hostname: elasticsearch1
+    restart: always
+    ports: 
+      - "9200:9200"
+    environment:
+      - "node.name=elasticsearch1"
+      - "bootstrap.memory_lock=true"
+      - "cluster.name=es-cluster"
+      - "discovery.seed_hosts=elasticsearch2,elasticsearch3"
+      - "cluster.initial_master_nodes=elasticsearch1,elasticsearch2,elasticsearch3"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+      - "xpack.security.enabled=false"
+      - "xpack.security.http.ssl.enabled=false"
+      - "xpack.security.transport.ssl.enabled=false"
+    networks:
+      - snowplow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
+    container_name: elasticsearch2
+    hostname: elasticsearch2
+    restart: always
+    ports: 
+      - "9201:9200"
+    environment:
+      - "node.name=elasticsearch2"
+      - "bootstrap.memory_lock=true"
+      - "cluster.name=es-cluster"
+      - "discovery.seed_hosts=elasticsearch1,elasticsearch3"
+      - "cluster.initial_master_nodes=elasticsearch1,elasticsearch2,elasticsearch3"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+      - "xpack.security.enabled=false"
+      - "xpack.security.http.ssl.enabled=false"
+      - "xpack.security.transport.ssl.enabled=false"
+    depends_on:
+      - elasticsearch1
+    networks:
+      - snowplow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  elasticsearch3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
+    container_name: elasticsearch3
+    hostname: elasticsearch3
+    restart: always
+    ports: 
+      - "9202:9200"
+    environment:
+      - "node.name=elasticsearch3"
+      - "bootstrap.memory_lock=true"
+      - "cluster.name=es-cluster"
+      - "discovery.seed_hosts=elasticsearch2,elasticsearch3"
+      - "cluster.initial_master_nodes=elasticsearch1,elasticsearch2,elasticsearch3"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+      - "xpack.security.enabled=false"
+      - "xpack.security.http.ssl.enabled=false"
+      - "xpack.security.transport.ssl.enabled=false"
+    depends_on:
+      - elasticsearch1
+    networks:
+      - snowplow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.6.1
+    container_name: kibana
+    restart: always
+    environment:
+      - 'ELASTICSEARCH_HOSTS=["http://elasticsearch1:9200","http://elasticsearch2:9200","http://elasticsearch3:9200"]'
+      - "SERVER_NAME=localhost"
+      - "SERVER_PUBLICBASEURL=http://localhost:5601"
+    ports:
+      - "5601:5601"
+    networks:
+      - snowplow
+
+# snowplow
+  iglu-server:
+    image: dinhphu/snowplow-iglu
+    container_name: iglu-server
+    restart: always
+    ports:
+      - 8181:8181
+    depends_on:
+      - postgresdb
+    networks:
+      - snowplow
+
+  collector:
+    image: dinhphu/snowplow-collector
+    container_name: collector
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - kafka1
+    networks:
+      - snowplow
+  
+  enrich:
+    image: dinhphu/snowplow-enrich
+    container_name: enrich
+    restart: always
+    depends_on:
+      - kafka1
+      - iglu-server
+    networks:
+      - snowplow
+
+  loader:
+    image: dinhphu/snowplow-loader
+    container_name: loader
+    restart: always
+    environment:
+      - BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9093,kafka3:9094
+      - ES_HOSTS=elasticsearch1:9200,elasticsearch2:9200,elasticsearch3:9200
+    depends_on:
+      - enrich
+      - kafka1
+    networks:
+      - snowplow
+    
+networks:
+  snowplow:
+    external: true
