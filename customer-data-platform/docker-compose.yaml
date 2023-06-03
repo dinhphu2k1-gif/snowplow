@@ -290,4 +290,4 @@ services:
     
 networks:
   snowplow:
-    external: true
+    driver: bridge

@@ -21,10 +21,15 @@ public class UserContext implements IContext {
 
     @Override
     public void parseContext(JSONObject data) {
-        user_id = data.getString("user_id");
-        user_name = data.getString("user_name");
-        phone_number = data.getString("phone_number");
-        email = data.getString("email");
-        address = data.getString("address");
+        try {
+            user_id = data.getString("user_id");
+            user_name = data.getString("user_name");
+            phone_number = data.getString("phone_number");
+            email = data.getString("email");
+            address = data.getString("address");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }
