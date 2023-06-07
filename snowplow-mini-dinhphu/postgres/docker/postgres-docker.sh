@@ -1,1 +1,1 @@
-docker run --name postgresdb -p 5432:5432 -d dinhphu/iglu-postgres
+docker run --name postgresdb -p 5432:5432 -d --network snowplow dinhphu/iglu-postgres
