@@ -8,10 +8,11 @@ import java.util.*;
 
 @Getter
 public class KafkaUtils {
-    private final Map<String, Object> kafkaParams = new HashMap<>();
+    private Map<String, Object> kafkaParams;
     private final Collection<String> topics;
 
     public KafkaUtils(String groupId, String... topics) {
+        kafkaParams = new HashMap<>();
 
         kafkaParams.put("bootstrap.servers", ConfigInfo.Kafka.KAFKA_HOST);
         kafkaParams.put("key.deserializer", StringDeserializer.class);
@@ -24,6 +25,8 @@ public class KafkaUtils {
     }
 
     public KafkaUtils(String groupId, Collection<String> topics) {
+        kafkaParams = new HashMap<>();
+
         kafkaParams.put("bootstrap.servers", ConfigInfo.Kafka.KAFKA_HOST);
         kafkaParams.put("key.deserializer", StringDeserializer.class);
         kafkaParams.put("value.deserializer", StringDeserializer.class);
