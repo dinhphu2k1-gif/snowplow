@@ -227,8 +227,8 @@ services:
     container_name: loader
     restart: always
     environment:
-      - BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9093,kafka3:9094
-      - ES_HOSTS=elasticsearch1:9200,elasticsearch2:9200,elasticsearch3:9200
+      - BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9093
+      - ES_HOSTS=elasticsearch1:9200,elasticsearch2:9200
     depends_on:
       - enrich
       - kafka1
