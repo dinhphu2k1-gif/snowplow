@@ -9,13 +9,13 @@ import org.json.JSONObject;
  */
 @Getter
 public class ProductContext implements IContext {
-    private String product_id;
+    private int product_id;
     private String product_name;
     private int quantity;
     private int price;
-    private String category;
-    private String publisher;
-    private String author;
+    private int category_id;
+    private int publisher_id;
+    private int author_id;
 
     public ProductContext(JSONObject data) {
         parseContext(data);
@@ -23,12 +23,12 @@ public class ProductContext implements IContext {
 
     @Override
     public void parseContext(JSONObject data) {
-        product_id = data.getString("product_id");
+        product_id = data.getInt("product_id");
         product_name = data.getString("product_name");
         quantity = data.getInt("quantity");
         price = data.getInt("price");
-        category = data.getString("category");
-        publisher = data.getString("publisher");
-        author = data.getString("author");
+        category_id = data.getInt("category_id");
+        publisher_id = data.getInt("publisher_id");
+        author_id = data.getInt("author_id");
     }
 }

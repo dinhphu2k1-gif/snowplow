@@ -7,4 +7,4 @@ WORKDIR /loader-kafka
 
 ADD . /loader-kafka
 
-ENTRYPOINT [ "java", "-jar", "target/loader-kafka-1.0-SNAPSHOT.jar" ]
+ENTRYPOINT [ "java", "-cp", "target/loader-kafka-1.0-SNAPSHOT-jar-with-dependencies.jar", "org.hust.loader.kafka.CollectEvent" ]

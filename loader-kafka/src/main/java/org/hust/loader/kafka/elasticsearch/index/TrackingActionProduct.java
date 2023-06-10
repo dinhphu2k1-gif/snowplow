@@ -30,7 +30,7 @@ public class TrackingActionProduct implements IUnstructDocument {
     /**
      * id của user, do trang web định danh
      */
-    private String user_id;
+    private int user_id;
     /**
      * id cuả user, do snowplow định danh
      */
