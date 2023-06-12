@@ -239,6 +239,25 @@ services:
       - kafka1
     networks:
       - snowplow
+
+  metabase:
+    image: metabase/metabase
+    container_name: metabase
+    # restart: always
+    environment:
+      - MB_DB_TYPE=mysql
+      - MB_DB_DBNAME=customer-data-platform
+      - MB_DB_PORT=3306
+      - MB_DB_USER=book_shop
+      - MB_DB_PASS=package1107N
+      - MB_DB_HOST=mysqldb
+    ports:
+      - 4000:3000
+    depends_on:
+      - mysqldb
+    networks:
+      - snowplow
+
     
 networks:
   snowplow:
