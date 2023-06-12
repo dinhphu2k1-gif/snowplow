@@ -12,7 +12,11 @@ public class ConfigInfo {
         public final static String KAFKA_HOST = HostUtils.getKafkaHost();
     }
 
-    public static void main(String[] args) {
-        System.out.println(Kafka.KAFKA_HOST);
+    public static class Mysql {
+        public final static String MYSQL_HOST = HostUtils.getMysqlHost();
+        public final static String MYSQL_PORT = "3306";
+        public final static String MYSQL_DATABASE = "customer-data-platform";
+        public final static String MYSQL_USER = "book_shop";
+        public final static String MYSQL_PASSWORD = "package1107N";
     }
 }

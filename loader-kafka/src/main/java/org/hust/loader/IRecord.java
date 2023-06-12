@@ -1,7 +1,7 @@
-package org.hust.loader.kafka.elasticsearch;
+package org.hust.loader;
 
-import org.hust.loader.kafka.elasticsearch.index.TrackingActionProduct;
-import org.hust.loader.kafka.elasticsearch.index.TrackingActionSearch;
+import org.hust.loader.record.TrackingActionProduct;
+import org.hust.loader.record.TrackingActionSearch;
 import org.hust.model.entity.IContext;
 import org.hust.model.entity.impl.ProductContext;
 import org.hust.model.entity.impl.UserContext;
@@ -13,11 +13,9 @@ import org.hust.model.event.unstruct.impl.SearchAction;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Các document được tạo từ các unstruct event
- */
-public interface IUnstructDocument {
-    static IUnstructDocument createDocument(Event event) {
+public interface IRecord {
+
+    static IRecord createRecord(Event event){
         List<IContext> contextList = IContext.createContext(event);
         IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
 
@@ -33,13 +31,15 @@ public interface IUnstructDocument {
             }
         }
 
-        IUnstructDocument unstructDocument = null;
+        IRecord record = null;
         if (unstructEvent instanceof ProductAction) {
-            unstructDocument = new TrackingActionProduct(event, productContextList, userContext, (ProductAction) unstructEvent);
+            record = new TrackingActionProduct(event, productContextList, userContext, (ProductAction) unstructEvent);
         } else if (unstructEvent instanceof SearchAction) {
-            unstructDocument = new TrackingActionSearch(event, userContext, (SearchAction) unstructEvent);
+            record = new TrackingActionSearch(event, userContext, (SearchAction) unstructEvent);
         }
 
-        return unstructDocument;
+        return record;
+
     }
+
 }

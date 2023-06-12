@@ -1,7 +1,8 @@
-package org.hust.loader.kafka.elasticsearch.index;
+package org.hust.loader.record;
 
 import com.google.gson.Gson;
-import org.hust.loader.kafka.elasticsearch.IUnstructDocument;
+import lombok.Getter;
+import org.hust.loader.IRecord;
 import org.hust.model.entity.impl.ProductContext;
 import org.hust.model.entity.impl.UserContext;
 import org.hust.model.event.Event;
@@ -14,7 +15,8 @@ import java.util.List;
 /**
  * Lưu lại cac sự kiện xảy ra với sản phẩm
  */
-public class TrackingActionProduct implements IUnstructDocument {
+@Getter
+public class TrackingActionProduct implements IRecord {
     /**
      * Thời gian xảy ra sự kiện. VD 1684418681417
      */
@@ -50,7 +52,7 @@ public class TrackingActionProduct implements IUnstructDocument {
 
     public TrackingActionProduct(Event event, List<ProductContext> productContext, UserContext userContext, ProductAction productAction) {
         time = event.getDvce_created_tstamp() + 25200 * 1000;
-        date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(time));
+        date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time));
         event_id = event.getEvent_id();
         user_id = userContext.getUser_id();
         domain_userid = event.getDomain_userid();

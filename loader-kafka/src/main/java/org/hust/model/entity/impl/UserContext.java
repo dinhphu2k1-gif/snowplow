@@ -9,11 +9,11 @@ import org.json.JSONObject;
  */
 @Getter
 public class UserContext implements IContext {
-    private int user_id;
-    private String user_name;
-    private String phone_number;
-    private String email;
-    private String address;
+    private int user_id = -1;
+    private String user_name = "-1";
+    private String phone_number = "-1";
+    private String email = "-1";
+    private String address = "-1";
 
     public UserContext(JSONObject data) {
         parseContext(data);

@@ -14,7 +14,6 @@ public class HostUtils {
     }
 
     public static HttpHost[] getEsHost() {
-
         String addressString = System.getenv("ES_HOSTS");
         if (addressString == null) {
 
@@ -37,5 +36,11 @@ public class HostUtils {
 
             return esHosts.toArray(new HttpHost[0]);
         }
+    }
+
+    public static String getMysqlHost() {
+        return System.getenv("MYSQL_HOST") == null
+                ? "localhost"
+                : System.getenv("MYSQL_HOST");
     }
 }
