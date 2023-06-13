@@ -51,6 +51,7 @@ public class CollectEvent implements IJobBuilder {
 
     public static Event transformRow(Row row) {
         String value = row.getAs(0);
+        System.out.println(value);
         return new Event(value);
     }
 
@@ -66,6 +67,8 @@ public class CollectEvent implements IJobBuilder {
                     .map(consumerRecord -> RowFactory.create(consumerRecord.value(), consumerRecord.topic()))
                     .map(CollectEvent::transformRow)
                     .filter(Objects::nonNull);
+
+            rows.foreach(System.out::println);
 
             Dataset<Row> df = spark.createDataFrame(rows, Event.class);
             df.select("contexts", "unstruct_event").show();
