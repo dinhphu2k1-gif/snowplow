@@ -59,6 +59,8 @@ public class CollectEvent implements IJobBuilder {
         loadAgrs(args);
         init();
 
+        String path = "";
+
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
                     .map(consumerRecord -> RowFactory.create(consumerRecord.value(), consumerRecord.topic()))
@@ -66,8 +68,12 @@ public class CollectEvent implements IJobBuilder {
                     .filter(Objects::nonNull);
 
             Dataset<Row> df = spark.createDataFrame(rows, Event.class);
+            df.select("contexts", "unstruct_event").show();
 
-            df.show();
+//            df.show();
+//            df.coalesce(1)
+//                    .write()
+//                    .parquet("path");
         });
 
         // start
