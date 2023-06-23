@@ -1,4 +1,4 @@
-package org.hust.job.impl;
+package org.hust.job.spark;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -6,13 +6,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
-import org.apache.spark.streaming.dstream.InputDStream;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
-import org.hust.job.ArgsOptional;
-import org.hust.job.IJobBuilder;
 import org.hust.model.event.Event;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
@@ -23,24 +19,24 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class CollectEvent implements IJobBuilder {
+public class CollectEvent {
     private SparkUtils sparkUtils;
     private SparkSession spark;
     private JavaInputDStream<ConsumerRecord<Object, Object>> stream;
     private static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy_MM_dd/HH_mm_ss");
-    private ArgsOptional args;
     private Set<String> topicList;
+    private int duration;
+    private String groupId;
 
-    public void loadAgrs(ArgsOptional args) {
-        this.args = args;
-        this.topicList = new HashSet<>(Arrays.asList(args.getTopics().split(",")));
-    }
+    public CollectEvent() {
+        duration = 10;
+        groupId = "abc";
+        topicList = new HashSet<>(Arrays.asList("enriched"));
 
-    public void init() {
-        sparkUtils = new SparkUtils("collect event", "local", args.getDuration());
+        sparkUtils = new SparkUtils("collect event", "local", duration);
         spark = sparkUtils.getSparkSession();
 
-        KafkaUtils kafkaUtils = new KafkaUtils(args.getGroupId(), topicList);
+        KafkaUtils kafkaUtils = new KafkaUtils(groupId, topicList);
 
         stream = org.apache.spark.streaming.kafka010.KafkaUtils
                 .createDirectStream(sparkUtils.getJavaStreamingContext(),
@@ -51,17 +47,10 @@ public class CollectEvent implements IJobBuilder {
 
     public static Event transformRow(Row row) {
         String value = row.getAs(0);
-        System.out.println(value);
         return new Event(value);
     }
 
-    @Override
-    public void run(ArgsOptional args) {
-        loadAgrs(args);
-        init();
-
-        String path = "";
-
+    public void run() {
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
                     .map(consumerRecord -> RowFactory.create(consumerRecord.value(), consumerRecord.topic()))
@@ -86,5 +75,10 @@ public class CollectEvent implements IJobBuilder {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void main(String[] args) {
+        CollectEvent collectEvent = new CollectEvent();
+        collectEvent.run();
     }
 }

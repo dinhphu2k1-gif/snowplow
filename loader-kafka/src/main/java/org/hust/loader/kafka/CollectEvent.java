@@ -23,7 +23,7 @@ public class CollectEvent {
     public CollectEvent() {
         Properties props = new Properties();
         props.put("bootstrap.servers", ConfigInfo.Kafka.KAFKA_HOST);
-        props.put("group.id", "snowplow1");
+        props.put("group.id", "snowplow123");
         props.put("enable.auto.commit", "false");
         props.put("auto.offset.reset", "latest");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -51,11 +51,11 @@ public class CollectEvent {
                             e.printStackTrace();
                         }
 
-                        try {
-                            InsertRecord.insertRecord(iRecord);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+//                        try {
+//                            InsertRecord.insertRecord(iRecord);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
 
                     }
                     break;

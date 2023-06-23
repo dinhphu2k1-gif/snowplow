@@ -9,7 +9,7 @@ import java.util.List;
 public class HostUtils {
     public static String getKafkaHost() {
         return System.getenv("BOOTSTRAP_SERVERS") == null
-                ? "localhost:29092,localhost:29093"
+                ? "20.196.248.69:9092,20.196.245.32:9092"
                 : System.getenv("BOOTSTRAP_SERVERS");
     }
 

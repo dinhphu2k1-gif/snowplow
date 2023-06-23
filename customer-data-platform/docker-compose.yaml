@@ -20,20 +20,20 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/customer-data-platform
     depends_on:
       - mysqldb
-    ports:
-      - 10000:10000
+    # ports:
+    #   - 10000:10000
     networks:
       - snowplow
     volumes:
       - ./data/backend/images:/book-shop-web/backend/public/static/images
 
   bookshop-frontend:
-    image: dinhphu/bookshop-frontend:1.0.0
+    image: dinhphu/bookshop-frontend:1.0.1
     container_name: bookshop-frontend
     # restart: always
     environment:
-      - BACKEND_HOST=bookshop-backend
-      - COLLECTOR_HOST=collector
+      - REACT_APP_BACKEND_HOST=bookshop-backend
+      - REACT_APP_COLLECTOR_HOST=collector
     depends_on:
       - bookshop-backend
     ports:
@@ -42,11 +42,11 @@ services:
       - snowplow
 
   bookshop-admin:
-    image: dinhphu/bookshop-admin:1.0.0
+    image: dinhphu/bookshop-admin:1.0.1
     container_name: bookshop-admin
     # restart: always
     environment:
-      - BACKEND_HOST=bookshop-backend
+      - REACT_APP_BACKEND_HOST=bookshop-backend
     depends_on:
       - bookshop-backend
     ports:

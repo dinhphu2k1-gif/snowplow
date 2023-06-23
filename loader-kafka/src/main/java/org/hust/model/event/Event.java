@@ -227,7 +227,7 @@ public class Event {
     private String mkt_campaign;
     private String mkt_clickid;
     private String mkt_network;
-    private JSONObject contexts;
+    private String contexts;
 
     //Browser fields
     /**
@@ -300,7 +300,7 @@ public class Event {
     private String se_label;
     private String se_property;
     private String se_value;
-    private JSONObject unstruct_event;
+    private String unstruct_event;
 
     //E-commerce transactions
     /**
@@ -453,7 +453,7 @@ public class Event {
         mkt_term = propertyIndex[49];
         mkt_content = propertyIndex[50];
         mkt_campaign = propertyIndex[51];
-        contexts = new JSONObject(propertyIndex[52]);
+        contexts = propertyIndex[52];
         se_category = propertyIndex[53];
         se_action = propertyIndex[54];
         se_label = propertyIndex[55];
@@ -461,7 +461,7 @@ public class Event {
         se_value = propertyIndex[57];
 
         try {
-            unstruct_event = new JSONObject(propertyIndex[58]);
+            unstruct_event = propertyIndex[58];
         } catch (Exception e) {
         }
 
@@ -576,5 +576,13 @@ public class Event {
 
         }
 
+    }
+
+    public JSONObject getContexts() {
+        return new JSONObject(contexts);
+    }
+
+    public JSONObject getUnstruct_event() {
+        return new JSONObject(unstruct_event);
     }
 }
