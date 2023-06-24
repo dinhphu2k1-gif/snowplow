@@ -69,7 +69,7 @@ public class CollectEvent implements IJobBuilder {
                     .filter(Objects::nonNull);
 
             Dataset<Row> df = spark.createDataFrame(rows, Event.class);
-            df.select("contexts", "unstruct_event").show();
+            df.select("user_id", "contexts", "unstruct_event").show();
 
 //            df.show();
 //            df.coalesce(1)

@@ -460,10 +460,8 @@ public class Event {
         se_property = propertyIndex[56];
         se_value = propertyIndex[57];
 
-        try {
-            unstruct_event = propertyIndex[58];
-        } catch (Exception e) {
-        }
+        unstruct_event = propertyIndex[58];
+
 
         tr_orderid = propertyIndex[59];
         tr_affiliation = propertyIndex[60];
@@ -583,6 +581,10 @@ public class Event {
     }
 
     public JSONObject getUnstruct_event() {
-        return new JSONObject(unstruct_event);
+        try {
+            return new JSONObject(unstruct_event);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
