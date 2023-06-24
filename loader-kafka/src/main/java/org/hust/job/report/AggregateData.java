@@ -90,6 +90,9 @@ public class AggregateData {
         String path = "hdfs://172.19.0.20:9000/data/event/" + DateTimeUtils.getDate() + "/*";
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
+        Dataset<Row> df = spark.read().parquet(path);
+        df.show();
+
         Dataset<Event> ds = spark.read().parquet(path).as(eventEncoder);
         ds.show();
 
@@ -97,8 +100,8 @@ public class AggregateData {
 
         // thực hiện các hàm tổng hợp
 //        topViewProduct(unstructDs);
-        Dataset<Row> df = transformProductDf(unstructDs);
-        df.show();
+        Dataset<Row> data = transformProductDf(unstructDs);
+        data.show();
 
     }
 
