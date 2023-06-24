@@ -8,7 +8,7 @@ import org.json.JSONObject;
 
 public interface IUnstructEvent {
     static IUnstructEvent createEvent(Event event) {
-        JSONObject unstruct_event = event.getUnstruct_event().getJSONObject("data");
+        JSONObject unstruct_event = new JSONObject(event.getUnstruct_event()).getJSONObject("data");
         String schema = unstruct_event.getString("schema");
         JSONObject data = unstruct_event.getJSONObject("data");
 

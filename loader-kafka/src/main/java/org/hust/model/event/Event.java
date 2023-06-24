@@ -575,16 +575,4 @@ public class Event {
         }
 
     }
-
-    public JSONObject getContexts() {
-        return new JSONObject(contexts);
-    }
-
-    public JSONObject getUnstruct_event() {
-        try {
-            return new JSONObject(unstruct_event);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

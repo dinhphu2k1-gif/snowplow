@@ -42,7 +42,7 @@ public interface IContext {
     static List<IContext> createContext(Event event) {
         List<IContext> contextList =new ArrayList<>();
 
-        JSONObject contexts = event.getContexts();
+        JSONObject contexts = new JSONObject(event.getContexts());
         JSONArray data = contexts.getJSONArray("data");
 
         for (int i = 0; i < data.length(); i++) {
