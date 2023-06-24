@@ -97,6 +97,7 @@ public class AggregateData {
         ds.show();
 
         Dataset<Event> unstructDs = ds.filter("event = 'unstruct'");
+        unstructDs.show();
 
         // thực hiện các hàm tổng hợp
 //        topViewProduct(unstructDs);
