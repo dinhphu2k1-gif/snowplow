@@ -18,8 +18,7 @@ public class HostUtils {
         if (addressString == null) {
 
             return new HttpHost[]{
-                    new HttpHost("localhost", 9200, "http"),
-                    new HttpHost("localhost", 9201, "http"),
+                    new HttpHost("20.196.245.32", 9200, "http")
             };
         } else {
             List<String> addressList = Arrays.asList(addressString.split(","));
