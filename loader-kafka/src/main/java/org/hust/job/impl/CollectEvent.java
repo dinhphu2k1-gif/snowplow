@@ -2,10 +2,7 @@ package org.hust.job.impl;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.dstream.InputDStream;
@@ -55,6 +52,10 @@ public class CollectEvent implements IJobBuilder {
         return new Event(value);
     }
 
+    public void insertIntoEs() {
+
+    }
+
     @Override
     public void run(ArgsOptional args) {
         loadAgrs(args);
@@ -62,15 +63,16 @@ public class CollectEvent implements IJobBuilder {
 
         String path = "";
 
+        Encoder<Event> eventEncoder = Encoders.bean(Event.class);
+
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
                     .map(consumerRecord -> RowFactory.create(consumerRecord.value(), consumerRecord.topic()))
                     .map(CollectEvent::transformRow)
                     .filter(Objects::nonNull);
 
-            Dataset<Row> df = spark.createDataFrame(rows, Event.class);
+            Dataset<Event> df = spark.createDataset(rows.rdd(), eventEncoder);
             df.select("user_id", "contexts", "unstruct_event").show();
-
 //            df.show();
 //            df.coalesce(1)
 //                    .write()
