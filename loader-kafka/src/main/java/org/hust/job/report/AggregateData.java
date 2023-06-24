@@ -29,52 +29,50 @@ public class AggregateData {
     /**
      * Lọc data product
      */
-    public Dataset<Row> transformProductDf(Dataset<Event> ds){
+    public Dataset<Row> transformProductDf(Dataset<Event> ds) {
         StructType schema = new StructType()
-                .add("action", DataTypes.StringType, true);
-//                .add("product_id", DataTypes.IntegerType, true)
-//                .add("product_name", DataTypes.StringType, true)
-//                .add("quantity", DataTypes.IntegerType, true)
-//                .add("price", DataTypes.IntegerType, true)
-//                .add("category_id", DataTypes.IntegerType, true)
-//                .add("publisher_id", DataTypes.IntegerType, true);
-//                .add("author_id", DataTypes.IntegerType, false);
+                .add("action", DataTypes.StringType, true)
+                .add("product_id", DataTypes.IntegerType, true)
+                .add("product_name", DataTypes.StringType, true)
+                .add("quantity", DataTypes.IntegerType, true)
+                .add("price", DataTypes.IntegerType, true)
+                .add("category_id", DataTypes.IntegerType, true)
+                .add("publisher_id", DataTypes.IntegerType, true)
+                .add("author_id", DataTypes.IntegerType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
         Dataset<Row> df = ds
                 .filter("event_name = 'product_action'")
                 .mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
-            List<Row> rowList = new ArrayList<>();
+                    List<Row> rowList = new ArrayList<>();
 
-            while (t.hasNext()) {
-                Event event = t.next();
-                List<IContext> contextList = IContext.createContext(event);
-                IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
+                    while (t.hasNext()) {
+                        Event event = t.next();
+                        List<IContext> contextList = IContext.createContext(event);
+                        IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
 
-                ProductAction productAction = (ProductAction) unstructEvent;
-                assert productAction != null;
-                Row row = RowFactory.create(productAction.getAction());
-                rowList.add(row);
+                        ProductAction productAction = (ProductAction) unstructEvent;
 
-//                for (IContext context : contextList) {
-//                    if (context instanceof ProductContext) {
-//                        ProductContext productContext = (ProductContext) context;
-//
-//                        Row row = RowFactory.create(productAction.getAction(),
-//                                productContext.getProduct_id(),
-//                                productContext.getProduct_name(),
-//                                productContext.getQuantity(),
-//                                productContext.getPrice(),
-//                                productContext.getCategory_id(),
-//                                productContext.getPublisher_id());
-//                        System.out.println(row);
-//                        rowList.add(row);
-//                    }
-//                }
-            }
+                        for (IContext context : contextList) {
+                            if (context instanceof ProductContext) {
+                                ProductContext productContext = (ProductContext) context;
 
-            return rowList.iterator();
-        }, encoder);
+                                assert productAction != null;
+                                Row row = RowFactory.create(productAction.getAction(),
+                                        productContext.getProduct_id(),
+                                        productContext.getProduct_name(),
+                                        productContext.getQuantity(),
+                                        productContext.getPrice(),
+                                        productContext.getCategory_id(),
+                                        productContext.getPublisher_id());
+                                System.out.println(row);
+                                rowList.add(row);
+                            }
+                        }
+                    }
+
+                    return rowList.iterator();
+                }, encoder);
 
         return df;
     }
