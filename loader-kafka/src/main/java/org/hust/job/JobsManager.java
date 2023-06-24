@@ -23,6 +23,9 @@ public class JobsManager {
             case "CollectEvent":
                 jobBuilder = IJobBuilder.createJob(EnumJob.Collect);
                 break;
+            case "BatchEvent":
+                jobBuilder = IJobBuilder.createJob(EnumJob.Batch);
+                break;
             default:
                 throw new IllegalStateException("Unexpected value: " + optional.getJobName());
         }

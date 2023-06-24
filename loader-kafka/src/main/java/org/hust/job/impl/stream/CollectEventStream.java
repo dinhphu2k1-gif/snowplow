@@ -1,12 +1,9 @@
-package org.hust.job.impl;
+package org.hust.job.impl.stream;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
-import org.apache.spark.streaming.dstream.InputDStream;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.hust.job.ArgsOptional;
@@ -21,7 +18,7 @@ import org.hust.utils.SparkUtils;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class CollectEvent implements IJobBuilder {
+public class CollectEventStream implements IJobBuilder {
     private SparkUtils sparkUtils;
     private SparkSession spark;
     private JavaInputDStream<ConsumerRecord<Object, Object>> stream;
@@ -66,13 +63,6 @@ public class CollectEvent implements IJobBuilder {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
-//                        try {
-//                            InsertRecord.insertRecord(iRecord);
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-
                     }
                     break;
                 }
@@ -92,7 +82,7 @@ public class CollectEvent implements IJobBuilder {
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
                     .map(consumerRecord -> RowFactory.create(consumerRecord.value(), consumerRecord.topic()))
-                    .map(CollectEvent::transformRow)
+                    .map(CollectEventStream::transformRow)
                     .filter(Objects::nonNull);
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
