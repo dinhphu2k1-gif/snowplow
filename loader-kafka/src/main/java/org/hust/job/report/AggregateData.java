@@ -31,13 +31,13 @@ public class AggregateData {
      */
     public Dataset<Row> transformProductDf(Dataset<Event> ds){
         StructType schema = new StructType()
-                .add("action", DataTypes.StringType, false)
-                .add("product_id", DataTypes.IntegerType, false)
-                .add("product_name", DataTypes.StringType, false)
-                .add("quantity", DataTypes.IntegerType, false)
-                .add("price", DataTypes.IntegerType, false)
-                .add("category_id", DataTypes.IntegerType, false)
-                .add("publisher_id", DataTypes.IntegerType, false);
+                .add("action", DataTypes.StringType, true);
+//                .add("product_id", DataTypes.IntegerType, true)
+//                .add("product_name", DataTypes.StringType, true)
+//                .add("quantity", DataTypes.IntegerType, true)
+//                .add("price", DataTypes.IntegerType, true)
+//                .add("category_id", DataTypes.IntegerType, true)
+//                .add("publisher_id", DataTypes.IntegerType, true);
 //                .add("author_id", DataTypes.IntegerType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
@@ -55,22 +55,24 @@ public class AggregateData {
                 }
 
                 ProductAction productAction = (ProductAction) unstructEvent;
+                Row row = RowFactory.create(productAction.getAction());
+                rowList.add(row);
 
-                for (IContext context : contextList) {
-                    if (context instanceof ProductContext) {
-                        ProductContext productContext = (ProductContext) context;
-
-                        Row row = RowFactory.create(productAction.getAction(),
-                                productContext.getProduct_id(),
-                                productContext.getProduct_name(),
-                                productContext.getQuantity(),
-                                productContext.getPrice(),
-                                productContext.getCategory_id(),
-                                productContext.getPublisher_id());
-                        System.out.println(row);
-                        rowList.add(row);
-                    }
-                }
+//                for (IContext context : contextList) {
+//                    if (context instanceof ProductContext) {
+//                        ProductContext productContext = (ProductContext) context;
+//
+//                        Row row = RowFactory.create(productAction.getAction(),
+//                                productContext.getProduct_id(),
+//                                productContext.getProduct_name(),
+//                                productContext.getQuantity(),
+//                                productContext.getPrice(),
+//                                productContext.getCategory_id(),
+//                                productContext.getPublisher_id());
+//                        System.out.println(row);
+//                        rowList.add(row);
+//                    }
+//                }
             }
 
             return rowList.iterator();
