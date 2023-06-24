@@ -42,10 +42,4 @@ public class MysqlConnection {
             throw new RuntimeException(e);
         }
     }
-
-    public static void main(String[] args) {
-        MysqlConnection.getConnection();
-
-        MysqlConnection.close();
-    }
 }

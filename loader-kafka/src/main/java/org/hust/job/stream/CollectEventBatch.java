@@ -65,7 +65,7 @@ public class CollectEventBatch implements IJobBuilder {
 
 
             String dateTime = dateTimeFormat.format(new Date(time.milliseconds()));
-            String path = "hdfs://172.19.0.2:9000/data/event/" + dateTime;
+            String path = "hdfs://172.19.0.20:9000/data/event/" + dateTime;
             ds.coalesce(1)
                     .write()
                     .parquet(path);
