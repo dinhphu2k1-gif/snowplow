@@ -87,7 +87,7 @@ public class AggregateData {
     }
 
     public void run() {
-        String path = "hdfs://172.19.0.20:9000/data/event/" + DateTimeUtils.getDate();
+        String path = "hdfs://172.19.0.20:9000/data/event/" + DateTimeUtils.getDate() + "/*";
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
         Dataset<Event> ds = spark.read().parquet(path).as(eventEncoder);
