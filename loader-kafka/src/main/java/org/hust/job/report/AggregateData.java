@@ -68,6 +68,7 @@ public class AggregateData {
                                 productContext.getCategory_id(),
                                 productContext.getPublisher_id(),
                                 productContext.getAuthor_id());
+                        System.out.println(row);
                         rowList.add(row);
                     }
                 }
