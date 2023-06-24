@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 /**
@@ -13,7 +14,7 @@ import java.sql.Timestamp;
  */
 @Getter
 @Setter
-public class Event {
+public class Event implements Serializable {
     //Application fields
     /**
      * Application ID
