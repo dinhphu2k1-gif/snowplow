@@ -1,7 +1,7 @@
 package org.hust.job;
 
-import org.hust.job.impl.batch.CollectEventBatch;
-import org.hust.job.impl.stream.CollectEventStream;
+import org.hust.job.stream.CollectEventBatch;
+import org.hust.job.stream.CollectEventStream;
 
 public interface IJobBuilder {
     static IJobBuilder createJob(EnumJob enumJob) {

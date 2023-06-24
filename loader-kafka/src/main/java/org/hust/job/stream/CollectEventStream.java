@@ -1,4 +1,4 @@
-package org.hust.job.impl.stream;
+package org.hust.job.stream;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;

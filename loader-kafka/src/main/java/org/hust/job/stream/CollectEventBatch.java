@@ -1,4 +1,4 @@
-package org.hust.job.impl.batch;
+package org.hust.job.stream;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -8,10 +8,7 @@ import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.hust.job.ArgsOptional;
 import org.hust.job.IJobBuilder;
-import org.hust.loader.IRecord;
-import org.hust.loader.kafka.elasticsearch.InsertDocument;
 import org.hust.model.event.Event;
-import org.hust.model.event.EventType;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
 
