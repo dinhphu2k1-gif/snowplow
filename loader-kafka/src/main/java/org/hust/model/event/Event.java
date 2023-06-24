@@ -381,6 +381,10 @@ public class Event implements Serializable {
     private int pp_yoffset_max;
     private String derived_contexts;
 
+    public Event() {
+
+    }
+
     /**
      * Object đại diện cho 1 event lấy từ kafka
      * @param event_data event sau khi đã enrich
