@@ -38,7 +38,7 @@ public class AggregateData {
                 .add("price", DataTypes.IntegerType, true)
                 .add("category_id", DataTypes.IntegerType, true)
                 .add("publisher_id", DataTypes.IntegerType, true)
-                .add("author_id", DataTypes.IntegerType, false);
+                .add("author_id", DataTypes.IntegerType, true);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
         Dataset<Row> df = ds
@@ -64,7 +64,8 @@ public class AggregateData {
                                         productContext.getQuantity(),
                                         productContext.getPrice(),
                                         productContext.getCategory_id(),
-                                        productContext.getPublisher_id());
+                                        productContext.getPublisher_id(),
+                                        productContext.getAuthor_id());
                                 System.out.println(row);
                                 rowList.add(row);
                             }
