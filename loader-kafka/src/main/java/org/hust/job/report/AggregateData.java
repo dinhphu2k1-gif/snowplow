@@ -37,8 +37,8 @@ public class AggregateData {
                 .add("quantity", DataTypes.IntegerType, false)
                 .add("price", DataTypes.IntegerType, false)
                 .add("category_id", DataTypes.IntegerType, false)
-                .add("publisher_id", DataTypes.IntegerType, false)
-                .add("author_id", DataTypes.IntegerType, false);
+                .add("publisher_id", DataTypes.IntegerType, false);
+//                .add("author_id", DataTypes.IntegerType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
         Dataset<Row> df = ds.mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
@@ -66,8 +66,7 @@ public class AggregateData {
                                 productContext.getQuantity(),
                                 productContext.getPrice(),
                                 productContext.getCategory_id(),
-                                productContext.getPublisher_id(),
-                                productContext.getAuthor_id());
+                                productContext.getPublisher_id());
                         System.out.println(row);
                         rowList.add(row);
                     }
