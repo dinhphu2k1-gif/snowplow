@@ -2,6 +2,7 @@ package org.hust.job.impl;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
@@ -10,15 +11,15 @@ import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.hust.job.ArgsOptional;
 import org.hust.job.IJobBuilder;
+import org.hust.loader.IRecord;
+import org.hust.loader.kafka.elasticsearch.InsertDocument;
 import org.hust.model.event.Event;
+import org.hust.model.event.EventType;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class CollectEvent implements IJobBuilder {
     private SparkUtils sparkUtils;
@@ -52,8 +53,31 @@ public class CollectEvent implements IJobBuilder {
         return new Event(value);
     }
 
-    public void insertIntoEs() {
+    public void insertIntoEs(Dataset<Event> ds) {
+        ds.foreachPartition(t -> {
+            while (t.hasNext()) {
+                Event event = t.next();
 
+                switch (event.getEvent()) {
+                    case EventType.UNSTRUCT: {
+                        IRecord iRecord = IRecord.createRecord(event);
+                        try {
+                            InsertDocument.insertDocument(iRecord);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+//                        try {
+//                            InsertRecord.insertRecord(iRecord);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+
+                    }
+                    break;
+                }
+            }
+        });
     }
 
     @Override
@@ -71,8 +95,10 @@ public class CollectEvent implements IJobBuilder {
                     .map(CollectEvent::transformRow)
                     .filter(Objects::nonNull);
 
-            Dataset<Event> df = spark.createDataset(rows.rdd(), eventEncoder);
-            df.select("user_id", "contexts", "unstruct_event").show();
+            Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
+            ds.select("user_id", "contexts", "unstruct_event").show();
+
+            insertIntoEs(ds);
 //            df.show();
 //            df.coalesce(1)
 //                    .write()
