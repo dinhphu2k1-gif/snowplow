@@ -91,6 +91,7 @@ public class AggregateData {
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
         Dataset<Event> ds = spark.read().parquet(path).as(eventEncoder);
+        ds.show();
 
         Dataset<Event> unstructDs = ds.filter("event = 'unstruct'");
 
