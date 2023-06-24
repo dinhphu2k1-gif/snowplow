@@ -41,7 +41,9 @@ public class AggregateData {
 //                .add("author_id", DataTypes.IntegerType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
-        Dataset<Row> df = ds.mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
+        Dataset<Row> df = ds
+                .filter("event_name = 'product_action'")
+                .mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
             List<Row> rowList = new ArrayList<>();
 
             while (t.hasNext()) {
@@ -49,12 +51,8 @@ public class AggregateData {
                 List<IContext> contextList = IContext.createContext(event);
                 IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
 
-                // nếu không phải là product action thì bỏ qua
-                if (!(unstructEvent instanceof ProductAction)) {
-                    continue;
-                }
-
                 ProductAction productAction = (ProductAction) unstructEvent;
+                assert productAction != null;
                 Row row = RowFactory.create(productAction.getAction());
                 rowList.add(row);
 
