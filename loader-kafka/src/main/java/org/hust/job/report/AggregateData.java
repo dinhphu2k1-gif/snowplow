@@ -78,10 +78,27 @@ public class AggregateData {
         return df;
     }
 
-    public void topViewProduct(Dataset<Event> ds) {
+    public void topViewProduct(Dataset<Row> df) {
 
+    }
 
-        Dataset<Event> productActionDs = ds.filter("event_name = 'product_action'");
+    public void topViewCategory(Dataset<Row> df) {
+
+    }
+
+    public void topViewRange(Dataset<Row> df) {
+
+    }
+
+    public void topPurchaseProduct(Dataset<Row> df) {
+
+    }
+
+    public void topPurchaseCategory(Dataset<Row> df) {
+
+    }
+
+    public void topPurchaseRange(Dataset<Row> df) {
 
     }
 
@@ -90,19 +107,15 @@ public class AggregateData {
         System.out.println(path);
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
-        Dataset<Row> df = spark.read().parquet(path);
-        df.show();
-
         Dataset<Event> ds = spark.read().parquet(path).as(eventEncoder);
-        ds.show();
 
         Dataset<Event> unstructDs = ds.filter("event = 'unstruct'");
-        unstructDs.show();
 
         // thực hiện các hàm tổng hợp
-//        topViewProduct(unstructDs);
         Dataset<Row> data = transformProductDf(unstructDs);
         data.show();
+
+
 
     }
 

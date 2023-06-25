@@ -15,7 +15,7 @@ public class SparkUtils {
     public SparkUtils(String jobName, String master, int duration) {
         sparkSession = SparkSession.builder().appName(jobName)
                 .master(master)
-                .config("spark.sql.session.timeZone", "GMT+7")
+                .config("spark.sql.session.timeZone", "UTC+7")
                 .getOrCreate();
         sparkSession.sparkContext().setLogLevel("ERROR");
 
