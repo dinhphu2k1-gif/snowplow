@@ -11,14 +11,47 @@ import java.io.Serializable;
 import java.net.InetAddress;
 
 public class IpLookupUtils implements Serializable {
-    private static final DatabaseReader reader;
+    private static DatabaseReader reader;
 
-    static {
-        File database = new File(ConfigInfo.GEOLITE2_CITY);
-        try {
-            reader = new DatabaseReader.Builder(database).build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public static void initReader() {
+        if (reader != null) {
+            synchronized (IpLookupUtils.class) {
+                if (reader != null) {
+                    File database = new File(ConfigInfo.GEOLITE2_CITY);
+                    try {
+                        reader = new DatabaseReader.Builder(database).build();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+    }
+
+    public enum Type {
+        COUNTRY,
+        CITY,
+        ZIP_CODE,
+        LATITUDE,
+        LONGTITUDE
+    }
+
+    public static String convertIpTo(Type type, String ipAddress) {
+        initReader();
+
+        switch (type) {
+            case COUNTRY:
+                return getCountry(ipAddress);
+            case CITY:
+                return getCity(ipAddress);
+            case ZIP_CODE:
+                return getZipcode(ipAddress);
+            case LATITUDE:
+                return getLatitude(ipAddress);
+            case LONGTITUDE:
+                return getLongitude(ipAddress);
+            default:
+                return null;
         }
     }
 
@@ -38,21 +71,9 @@ public class IpLookupUtils implements Serializable {
         return null;
     }
 
-//    public static String getRegion(String ipAddress) {
-//        try {
-//            InetAddress inetAddress = InetAddress.getByName(ipAddress);
-//            CityResponse response = reader.city(inetAddress);
-//
-//            return response.getCountry().;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return "-1";
-//    }
-
     /**
      * Lấy tên thành phố từ ip
+     *
      * @return
      */
     public static String getCity(String ipAddress) {
