@@ -17,6 +17,8 @@ import org.hust.utils.SparkUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.spark.sql.functions.count;
+
 public class AggregateData {
     private SparkUtils sparkUtils;
     private SparkSession spark;
@@ -79,7 +81,11 @@ public class AggregateData {
     }
 
     public void topViewProduct(Dataset<Row> df) {
+        Dataset<Row> res = df.filter("action = 'view'")
+                .groupBy("product_id")
+                .agg(count("*").as("num_view"));
 
+        res.show();
     }
 
     public void topViewCategory(Dataset<Row> df) {

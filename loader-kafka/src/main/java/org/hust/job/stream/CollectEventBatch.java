@@ -11,6 +11,7 @@ import org.hust.job.IJobBuilder;
 import org.hust.model.event.Event;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
+import org.joda.time.DateTime;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -64,7 +65,7 @@ public class CollectEventBatch implements IJobBuilder {
             ds.select("user_id", "contexts", "unstruct_event").show();
 
 
-            String dateTime = dateTimeFormat.format(new Date(time.milliseconds()));
+            String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).plusHours(7).toDate());
             String path = "hdfs://172.19.0.20:9000/data/event/" + dateTime;
             ds.coalesce(1)
                     .write()
