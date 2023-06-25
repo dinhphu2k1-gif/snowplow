@@ -62,7 +62,7 @@ public class CollectEventBatch implements IJobBuilder {
                     .filter(Objects::nonNull);
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
-            ds.select("user_id", "contexts", "unstruct_event").show();
+            ds.select("user_id", "geo_city", "contexts", "unstruct_event").show();
 
 
             String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).plusHours(7).toDate());
