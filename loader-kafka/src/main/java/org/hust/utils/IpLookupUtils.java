@@ -7,9 +7,10 @@ import org.hust.config.ConfigInfo;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 
-public class IpLookupUtils {
+public class IpLookupUtils implements Serializable {
     private static final DatabaseReader reader;
 
     static {
