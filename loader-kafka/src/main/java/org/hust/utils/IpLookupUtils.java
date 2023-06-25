@@ -14,9 +14,9 @@ public class IpLookupUtils implements Serializable {
     private static DatabaseReader reader;
 
     public static void initReader() {
-        if (reader != null) {
+        if (reader == null) {
             synchronized (IpLookupUtils.class) {
-                if (reader != null) {
+                if (reader == null) {
                     File database = new File(ConfigInfo.GEOLITE2_CITY);
                     try {
                         reader = new DatabaseReader.Builder(database).build();
