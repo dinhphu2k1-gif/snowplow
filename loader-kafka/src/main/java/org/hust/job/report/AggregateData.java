@@ -89,7 +89,11 @@ public class AggregateData {
     }
 
     public void topViewCategory(Dataset<Row> df) {
+        Dataset<Row> res = df.filter("action = 'view'")
+                .groupBy("category_id")
+                .agg(count("*").as("num_view"));
 
+        res.show();
     }
 
     public void topViewRange(Dataset<Row> df) {
@@ -97,11 +101,19 @@ public class AggregateData {
     }
 
     public void topPurchaseProduct(Dataset<Row> df) {
+        Dataset<Row> res = df.filter("action = 'purchase'")
+                .groupBy("product_id")
+                .agg(count("*").as("num_view"));
 
+        res.show();
     }
 
     public void topPurchaseCategory(Dataset<Row> df) {
+        Dataset<Row> res = df.filter("action = 'purchase'")
+                .groupBy("category_id")
+                .agg(count("*").as("num_view"));
 
+        res.show();
     }
 
     public void topPurchaseRange(Dataset<Row> df) {
@@ -121,8 +133,10 @@ public class AggregateData {
         Dataset<Row> data = transformProductDf(unstructDs);
         data.show();
 
-
-
+        topViewProduct(data);
+        topViewCategory(data);
+        topPurchaseProduct(data);
+        topPurchaseCategory(data);
     }
 
     public static void main(String[] args) {
