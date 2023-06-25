@@ -2,6 +2,7 @@ package org.hust.model.event;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hust.utils.IpLookupUtils;
 import org.json.JSONObject;
 
 import java.io.Serializable;
@@ -420,12 +421,12 @@ public class Event implements Serializable {
         domain_userid = propertyIndex[15];
         domain_sessionid = propertyIndex[16];
         network_userid = propertyIndex[17];
-        geo_country = propertyIndex[18];
+        geo_country = IpLookupUtils.getCountry(user_ipaddress);
         geo_region = propertyIndex[19];
-        geo_city = propertyIndex[20];
-        geo_zipcode = propertyIndex[21];
-        geo_latitude = propertyIndex[22];
-        geo_longitude = propertyIndex[23];
+        geo_city = IpLookupUtils.getCity(user_ipaddress);
+        geo_zipcode = IpLookupUtils.getZipcode(user_ipaddress);
+        geo_latitude = IpLookupUtils.getLatitude(user_ipaddress);
+        geo_longitude = IpLookupUtils.getLongitude(user_ipaddress);
         geo_region_name = propertyIndex[24];
         ip_isp = propertyIndex[25];
         ip_organization = propertyIndex[26];

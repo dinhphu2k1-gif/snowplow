@@ -19,4 +19,6 @@ public class ConfigInfo {
         public final static String MYSQL_USER = "book_shop";
         public final static String MYSQL_PASSWORD = "package1107N";
     }
+
+    public final static String GEOLITE2_CITY = "src/main/resources/GeoLite2-City.mmdb";
 }

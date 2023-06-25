@@ -1,12 +1,19 @@
 package org.example;
 
 
-import org.joda.time.LocalDateTime;
-import org.joda.time.format.ISODateTimeFormat;
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.model.CityResponse;
+import com.maxmind.geoip2.record.City;
+import com.maxmind.geoip2.record.Country;
+import com.maxmind.geoip2.record.Location;
+import org.hust.utils.IpLookupUtils;
+
+import java.io.File;
+import java.net.InetAddress;
 
 public class Test {
     public static void main(String[] args) {
-        String time = "2023-05-15T10:15:01.178Z";
-        System.out.println(LocalDateTime.parse(time, ISODateTimeFormat.dateTime()).toDateTime().getMillis());
+        String ipAddress = "116.99.7.x"; // Replace with the IP address you want to retrieve the address for
+        System.out.println(IpLookupUtils.getCity(ipAddress));
     }
 }

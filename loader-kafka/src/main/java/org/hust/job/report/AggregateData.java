@@ -8,16 +8,19 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.hust.model.entity.IContext;
 import org.hust.model.entity.impl.ProductContext;
+import org.hust.model.entity.impl.UserContext;
 import org.hust.model.event.Event;
 import org.hust.model.event.unstruct.IUnstructEvent;
 import org.hust.model.event.unstruct.impl.ProductAction;
+import org.hust.model.event.unstruct.impl.SearchAction;
 import org.hust.utils.DateTimeUtils;
+import org.hust.utils.IpLookupUtils;
 import org.hust.utils.SparkUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.spark.sql.functions.count;
+import static org.apache.spark.sql.functions.*;
 
 public class AggregateData {
     private SparkUtils sparkUtils;
@@ -29,7 +32,7 @@ public class AggregateData {
     }
 
     /**
-     * Lọc data product
+     * Lọc data product và hành động liên quan đến product đó
      */
     public Dataset<Row> transformProductDf(Dataset<Event> ds) {
         StructType schema = new StructType()
@@ -80,6 +83,50 @@ public class AggregateData {
         return df;
     }
 
+    /**
+     * Lọc data product và hành động liên quan đến product đó
+     */
+    public Dataset<Row> transformUserDf(Dataset<Event> ds) {
+        StructType schema = new StructType()
+                .add("action", DataTypes.StringType, true)
+                .add("user_id", DataTypes.IntegerType, true)
+                .add("domain_userid", DataTypes.StringType, true)
+                .add("city", DataTypes.StringType, true);
+        ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
+
+        Dataset<Row> df = ds
+                .mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
+                    List<Row> rowList = new ArrayList<>();
+
+                    while (t.hasNext()) {
+                        Event event = t.next();
+
+                        String action = null;
+                        int user_id = Integer.parseInt(event.getUser_id());
+                        String domain_userid = event.getDomain_userid();
+                        String city = event.getGeo_city();
+
+                        if(event.getEvent().equals("unstruct")) {
+                            IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
+                            if (unstructEvent instanceof ProductAction) {
+                                action = ((ProductAction) unstructEvent).getAction();
+                            } else if (unstructEvent instanceof SearchAction) {
+                                action = ((SearchAction) unstructEvent).getAction();
+                            }
+                        } else {
+                            action = event.getEvent();
+                        }
+
+                        Row row = RowFactory.create(action, user_id, domain_userid, city);
+                        rowList.add(row);
+                    }
+
+                    return rowList.iterator();
+                }, encoder);
+
+        return df;
+    }
+
     public void topViewProduct(Dataset<Row> df) {
         Dataset<Row> res = df.filter("action = 'view'")
                 .groupBy("product_id")
@@ -97,13 +144,20 @@ public class AggregateData {
     }
 
     public void topViewRange(Dataset<Row> df) {
+        Dataset<Row> res = df.filter("action = 'view'")
+                .withColumn("range", when(col("price").lt(100000), "0 - 100000")
+                        .when(col("price").geq(100000).and(col("price").lt(500000)), "100000 - 500000")
+                        .otherwise(">= 500000"))
+                .groupBy("range")
+                .agg(count("*").as("num_view"));
 
+        res.show();
     }
 
     public void topPurchaseProduct(Dataset<Row> df) {
         Dataset<Row> res = df.filter("action = 'purchase'")
                 .groupBy("product_id")
-                .agg(count("*").as("num_view"));
+                .agg(count("*").as("num_purchase"));
 
         res.show();
     }
@@ -111,12 +165,34 @@ public class AggregateData {
     public void topPurchaseCategory(Dataset<Row> df) {
         Dataset<Row> res = df.filter("action = 'purchase'")
                 .groupBy("category_id")
-                .agg(count("*").as("num_view"));
+                .agg(count("*").as("num_purchase"));
 
         res.show();
     }
 
     public void topPurchaseRange(Dataset<Row> df) {
+        Dataset<Row> res = df.filter("action = 'purchase'")
+                .withColumn("range", when(col("price").lt(100000), "0 - 100000")
+                        .when(col("price").geq(100000).and(col("price").lt(500000)), "100000 - 500000")
+                        .otherwise(">= 500000"))
+                .groupBy("range")
+                .agg(count("*").as("num_purchase"));
+
+        res.show();
+    }
+
+    /**
+     * Đếm số lượng user hoạt động trong ngày
+     */
+    public void countUserActive(Dataset<Row> df) {
+        long numUserActive = df.select("domain_userid").distinct().count();
+        System.out.println("num user active: " + numUserActive);
+    }
+
+    /**
+     * Đếm số lượng truy cập theo từng tỉnh
+     */
+    public void countAccessByCity(Dataset<Row> df) {
 
     }
 
@@ -130,13 +206,20 @@ public class AggregateData {
         Dataset<Event> unstructDs = ds.filter("event = 'unstruct'");
 
         // thực hiện các hàm tổng hợp
-        Dataset<Row> data = transformProductDf(unstructDs);
-        data.show();
+        Dataset<Row> dataProduct = transformProductDf(unstructDs);
+        dataProduct.show();
 
-        topViewProduct(data);
-        topViewCategory(data);
-        topPurchaseProduct(data);
-        topPurchaseCategory(data);
+        topViewProduct(dataProduct);
+        topViewCategory(dataProduct);
+        topViewRange(dataProduct);
+        topPurchaseProduct(dataProduct);
+        topPurchaseCategory(dataProduct);
+        topPurchaseRange(dataProduct);
+
+        Dataset<Row> dataUser = transformUserDf(ds);
+        dataUser.show();
+
+        countUserActive(dataUser);
     }
 
     public static void main(String[] args) {
