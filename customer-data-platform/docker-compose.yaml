@@ -20,8 +20,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/customer-data-platform
     depends_on:
       - mysqldb
-    # ports:
-    #   - 10000:10000
+    ports:
+      - 10000:10000
     networks:
       - snowplow
     volumes:
@@ -240,23 +240,23 @@ services:
     networks:
       - snowplow
 
-  metabase:
-    image: metabase/metabase
-    container_name: metabase
-    # restart: always
-    environment:
-      - MB_DB_TYPE=mysql
-      - MB_DB_DBNAME=customer-data-platform
-      - MB_DB_PORT=3306
-      - MB_DB_USER=book_shop
-      - MB_DB_PASS=package1107N
-      - MB_DB_HOST=mysqldb
-    ports:
-      - 4000:3000
-    depends_on:
-      - mysqldb
-    networks:
-      - snowplow
+  # metabase:
+  #   image: metabase/metabase
+  #   container_name: metabase
+  #   # restart: always
+  #   environment:
+  #     - MB_DB_TYPE=mysql
+  #     - MB_DB_DBNAME=customer-data-platform
+  #     - MB_DB_PORT=3306
+  #     - MB_DB_USER=book_shop
+  #     - MB_DB_PASS=package1107N
+  #     - MB_DB_HOST=mysqldb
+  #   ports:
+  #     - 4000:3000
+  #   depends_on:
+  #     - mysqldb
+  #   networks:
+  #     - snowplow
 
     
 networks:
