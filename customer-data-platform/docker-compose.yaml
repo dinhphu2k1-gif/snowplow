@@ -8,7 +8,8 @@ services:
     ports:
       - 3306:3306
     networks:
-      - snowplow
+      snowplow:
+        ipv4_address: 172.19.0.2
     volumes:
       - ./data/mysql:/var/lib/mysql
 
@@ -17,13 +18,14 @@ services:
     container_name: bookshop-backend
     # restart: always
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/customer-data-platform
+      - SPRING_DATASOURCE_URL=jdbc:mysql://172.19.0.2:3306/customer-data-platform
     depends_on:
       - mysqldb
     ports:
       - 10000:10000
     networks:
-      - snowplow
+      snowplow:
+        ipv4_address: 172.19.0.3
     volumes:
       - ./data/backend/images:/book-shop-web/backend/public/static/images
 
@@ -32,14 +34,15 @@ services:
     container_name: bookshop-frontend
     # restart: always
     environment:
-      - REACT_APP_BACKEND_HOST=bookshop-backend
-      - REACT_APP_COLLECTOR_HOST=collector
+      - REACT_APP_BACKEND_HOST=172.19.0.3
+      - REACT_APP_COLLECTOR_HOST=172.19.0.13
     depends_on:
       - bookshop-backend
     ports:
       - 3000:3000
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.4
 
   bookshop-admin:
     image: dinhphu/bookshop-admin:1.0.1
@@ -52,7 +55,8 @@ services:
     ports:
       - 3001:3001
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.5
 
 # các phần phụ trợ liên quan
   postgresdb:
@@ -62,7 +66,8 @@ services:
     ports:
       - 5432:5432
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.6
 
   zookeeper:
     container_name: zookeeper
@@ -74,7 +79,8 @@ services:
     ports:
       - 22181:2181
     networks:
-      - snowplow
+      snowplow:
+        ipv4_address: 172.19.0.7
   
   kafka1:
     container_name: kafka1
@@ -85,7 +91,8 @@ services:
     ports:
       - 29092:29092
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.8
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -103,7 +110,8 @@ services:
     ports:
       - 29093:29093
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.9
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -130,7 +138,8 @@ services:
       - "xpack.security.http.ssl.enabled=false"
       - "xpack.security.transport.ssl.enabled=false"
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.10
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200"]
       interval: 30s
@@ -191,7 +200,8 @@ services:
     ports:
       - "5601:5601"
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.11
 
 # snowplow
   iglu-server:
@@ -203,7 +213,8 @@ services:
     depends_on:
       - postgresdb
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.12
 
   collector:
     image: dinhphu/snowplow-collector:1.0.0
@@ -214,7 +225,8 @@ services:
     depends_on:
       - kafka1
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.13
   
   enrich:
     image: dinhphu/snowplow-enrich:1.0.0
@@ -224,41 +236,50 @@ services:
       - kafka1
       - iglu-server
     networks:
-      - snowplow
+      snowplow: 
+        ipv4_address: 172.19.0.14
 
-  loader:
-    image: dinhphu/snowplow-loader:1.1.0
-    container_name: loader
-    # restart: always
-    environment:
-      - BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9093
-      - ES_HOSTS=elasticsearch1:9200
-      - MYSQL_HOST=mysqldb
-    depends_on:
-      - enrich
-      - kafka1
-    networks:
-      - snowplow
-
-  # metabase:
-  #   image: metabase/metabase
-  #   container_name: metabase
+  # loader:
+  #   image: dinhphu/snowplow-loader:1.1.0
+  #   container_name: loader
   #   # restart: always
   #   environment:
-  #     - MB_DB_TYPE=mysql
-  #     - MB_DB_DBNAME=customer-data-platform
-  #     - MB_DB_PORT=3306
-  #     - MB_DB_USER=book_shop
-  #     - MB_DB_PASS=package1107N
-  #     - MB_DB_HOST=mysqldb
-  #   ports:
-  #     - 4000:3000
+  #     - BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9093
+  #     - ES_HOSTS=elasticsearch1:9200
+  #     - MYSQL_HOST=mysqldb
   #   depends_on:
-  #     - mysqldb
+  #     - enrich
+  #     - kafka1
   #   networks:
-  #     - snowplow
+  #     snowplow: 
+  #       ipv4_address: 172.17.0.15
+
+  metabase:
+    image: metabase/metabase
+    container_name: metabase
+    # restart: always
+    # environment:
+      # - MB_DB_TYPE=mysql
+      # - MB_DB_DBNAME=customer-data-platform
+      # - MB_DB_PORT=3306
+      # - MB_DB_USER=book_shop
+      # - MB_DB_PASS=package1107N
+      # - MB_DB_HOST=mysqldb
+    ports:
+      - 4000:3000
+    # depends_on:
+    #   - mysqldb
+    networks:
+      snowplow: 
+        ipv4_address: 172.19.0.16
 
     
 networks:
   snowplow:
-    driver: bridge
+    external:
+      name: snowplow
+
+    # driver: bridge
+    # ipam:
+    #   config:
+    #     - subnet: 172.19.0.0/16

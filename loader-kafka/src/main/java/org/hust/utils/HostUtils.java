@@ -9,7 +9,7 @@ import java.util.List;
 public class HostUtils {
     public static String getKafkaHost() {
         return System.getenv("BOOTSTRAP_SERVERS") == null
-                ? "20.196.248.69:9092,20.196.245.32:9092"
+                ? "172.19.0.8:9092,172.19.0.9:9092"
                 : System.getenv("BOOTSTRAP_SERVERS");
     }
 
@@ -18,7 +18,7 @@ public class HostUtils {
         if (addressString == null) {
 
             return new HttpHost[]{
-                    new HttpHost("20.196.245.32", 9200, "http")
+                    new HttpHost("172.19.0.10", 9200, "http")
             };
         } else {
             List<String> addressList = Arrays.asList(addressString.split(","));

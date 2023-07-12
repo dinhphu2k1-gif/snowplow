@@ -75,8 +75,6 @@ public class CollectEventStream implements IJobBuilder {
         loadAgrs(args);
         init();
 
-        String path = "";
-
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
