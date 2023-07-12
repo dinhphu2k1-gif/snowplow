@@ -39,7 +39,7 @@ public class HostUtils {
 
     public static String getMysqlHost() {
         return System.getenv("MYSQL_HOST") == null
-                ? "localhost"
+                ? "172.19.0.2"
                 : System.getenv("MYSQL_HOST");
     }
 }

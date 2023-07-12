@@ -12,6 +12,7 @@ import org.hust.loader.IRecord;
 import org.hust.loader.kafka.elasticsearch.InsertDocument;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
+import org.hust.service.mysql.MysqlService;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
 
@@ -70,6 +71,28 @@ public class CollectEventStream implements IJobBuilder {
         });
     }
 
+    public void insertMapping(Dataset<Event> ds) {
+        Dataset<Row> mapping = ds.select("user_id", "domain_userid")
+                .filter("user_id != '' and domain_userid != ''")
+                .dropDuplicates();
+
+        mapping.foreachPartition(t -> {
+            MysqlService mysqlService = new MysqlService();
+
+            while (t.hasNext()) {
+                Row row = t.next();
+
+                int user_id = Integer.parseInt(row.getString(0));
+                String domain_userid = row.getString(1);
+
+                boolean exist = mysqlService.checkExistMapping(user_id, domain_userid);
+                if (!exist) {
+                    mysqlService.insertMapping(user_id, domain_userid);
+                }
+            }
+        });
+    }
+
     @Override
     public void run(ArgsOptional args) {
         loadAgrs(args);
@@ -87,10 +110,7 @@ public class CollectEventStream implements IJobBuilder {
             ds.select("user_id", "contexts", "unstruct_event").show();
 
             insertIntoEs(ds);
-//            df.show();
-//            df.coalesce(1)
-//                    .write()
-//                    .parquet("path");
+            insertMapping(ds);
         });
 
         // start
