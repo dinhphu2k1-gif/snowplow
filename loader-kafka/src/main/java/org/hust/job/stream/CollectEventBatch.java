@@ -62,12 +62,14 @@ public class CollectEventBatch implements IJobBuilder {
                     .filter(Objects::nonNull);
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
-            ds.select("user_id", "geo_city", "contexts", "unstruct_event").show();
+            Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
+                    "user_id", "user_ipaddress", "domain_userid",  "geo_city", "contexts", "unstruct_event");
 
+            data.show();
 
             String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).plusHours(7).toDate());
             String path = "hdfs://172.19.0.20:9000/data/event/" + dateTime;
-            ds.coalesce(1)
+            data.coalesce(1)
                     .write()
                     .parquet(path);
 
