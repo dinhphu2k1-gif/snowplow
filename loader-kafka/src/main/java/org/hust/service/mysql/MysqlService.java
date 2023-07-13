@@ -45,7 +45,7 @@ public class MysqlService {
     }
 
     public void insertMapping(int user_id, String domain_userid) {
-        String sql = "INSERT INTO cdp_mapping (domain_userid, user_id, update_at) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO cdp_mapping (domain_userid, user_id, create_at) VALUES (?, ?, ?)";
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -60,12 +60,34 @@ public class MysqlService {
         }
     }
 
+    public int getUserId(String domain_userid) {
+        String sql = "SELECT user_id FROM cdp_mapping WHERE domain_userid = ?";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, domain_userid);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getInt("user_id");
+            }
+
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+
+        return -1;
+    }
+
 
     public static void main(String[] args) {
         MysqlService mysqlService = new MysqlService();
 
 //        System.out.println(mysqlService.checkExistMapping(1, "123"));
-        mysqlService.insertMapping(1, "1234");
+//        mysqlService.insertMapping(1, "1234");
+        System.out.println(mysqlService.getUserId("1234"));
         mysqlService.close();
     }
 }

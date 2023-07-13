@@ -8,13 +8,11 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.hust.model.entity.IContext;
 import org.hust.model.entity.impl.ProductContext;
-import org.hust.model.entity.impl.UserContext;
 import org.hust.model.event.Event;
 import org.hust.model.event.unstruct.IUnstructEvent;
 import org.hust.model.event.unstruct.impl.ProductAction;
 import org.hust.model.event.unstruct.impl.SearchAction;
 import org.hust.utils.DateTimeUtils;
-import org.hust.utils.IpLookupUtils;
 import org.hust.utils.SparkUtils;
 
 import java.util.ArrayList;
@@ -84,50 +82,10 @@ public class AggregateData {
     }
 
     /**
-     * Lọc data product và hành động liên quan đến product đó
+     *
+     * @param df
      */
-    public Dataset<Row> transformUserDf(Dataset<Event> ds) {
-        StructType schema = new StructType()
-                .add("action", DataTypes.StringType, true)
-                .add("user_id", DataTypes.IntegerType, true)
-                .add("domain_userid", DataTypes.StringType, true)
-                .add("city", DataTypes.StringType, true);
-        ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
-
-        Dataset<Row> df = ds
-                .mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
-                    List<Row> rowList = new ArrayList<>();
-
-                    while (t.hasNext()) {
-                        Event event = t.next();
-
-                        String action = null;
-                        int user_id = Integer.parseInt(event.getUser_id());
-                        String domain_userid = event.getDomain_userid();
-                        String city = event.getGeo_city();
-
-                        if(event.getEvent().equals("unstruct")) {
-                            IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
-                            if (unstructEvent instanceof ProductAction) {
-                                action = ((ProductAction) unstructEvent).getAction();
-                            } else if (unstructEvent instanceof SearchAction) {
-                                action = ((SearchAction) unstructEvent).getAction();
-                            }
-                        } else {
-                            action = event.getEvent();
-                        }
-
-                        Row row = RowFactory.create(action, user_id, domain_userid, city);
-                        rowList.add(row);
-                    }
-
-                    return rowList.iterator();
-                }, encoder);
-
-        return df;
-    }
-
-    public void topViewProduct(Dataset<Row> df) {
+    public void productAnalysis(Dataset<Row> df) {
         Dataset<Row> res = df.filter("action = 'view'")
                 .groupBy("product_id")
                 .agg(count("*").as("num_view"));
@@ -135,7 +93,11 @@ public class AggregateData {
         res.show();
     }
 
-    public void topViewCategory(Dataset<Row> df) {
+    /**
+     *
+     * @param df
+     */
+    public void categoryAnalysis(Dataset<Row> df) {
         Dataset<Row> res = df.filter("action = 'view'")
                 .groupBy("category_id")
                 .agg(count("*").as("num_view"));
@@ -143,7 +105,11 @@ public class AggregateData {
         res.show();
     }
 
-    public void topViewRange(Dataset<Row> df) {
+    /**
+     *
+     * @param df
+     */
+    public void rangeAnalysis(Dataset<Row> df) {
         Dataset<Row> res = df.filter("action = 'view'")
                 .withColumn("range", when(col("price").lt(100000), "0 - 100000")
                         .when(col("price").geq(100000).and(col("price").lt(500000)), "100000 - 500000")
@@ -154,72 +120,39 @@ public class AggregateData {
         res.show();
     }
 
-    public void topPurchaseProduct(Dataset<Row> df) {
-        Dataset<Row> res = df.filter("action = 'purchase'")
-                .groupBy("product_id")
-                .agg(count("*").as("num_purchase"));
+    /**
+     *
+     * @param df
+     */
+    public void viewAnalysis(Dataset<Row> df) {
+        Dataset<Row> data = df.filter("event = 'page_view'");
 
-        res.show();
+
     }
 
-    public void topPurchaseCategory(Dataset<Row> df) {
+    /**
+     *
+     * @param df
+     */
+    public void locationAnalysis(Dataset<Row> df) {
         Dataset<Row> res = df.filter("action = 'purchase'")
                 .groupBy("category_id")
                 .agg(count("*").as("num_purchase"));
 
         res.show();
-    }
-
-    public void topPurchaseRange(Dataset<Row> df) {
-        Dataset<Row> res = df.filter("action = 'purchase'")
-                .withColumn("range", when(col("price").lt(100000), "0 - 100000")
-                        .when(col("price").geq(100000).and(col("price").lt(500000)), "100000 - 500000")
-                        .otherwise(">= 500000"))
-                .groupBy("range")
-                .agg(count("*").as("num_purchase"));
-
-        res.show();
-    }
-
-    /**
-     * Đếm số lượng user hoạt động trong ngày
-     */
-    public void countUserActive(Dataset<Row> df) {
-        long numUserActive = df.select("domain_userid").distinct().count();
-        System.out.println("num user active: " + numUserActive);
-    }
-
-    /**
-     * Đếm số lượng truy cập theo từng tỉnh
-     */
-    public void countAccessByCity(Dataset<Row> df) {
-
     }
 
     public void run() {
         String path = "hdfs://172.19.0.20:9000/data/event/" + DateTimeUtils.getDate() + "/*";
         System.out.println(path);
-        Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
-        Dataset<Event> ds = spark.read().parquet(path).as(eventEncoder);
+        Dataset<Row> data = spark.read().parquet(path);
 
-        Dataset<Event> unstructDs = ds.filter("event = 'unstruct'");
-
-        // thực hiện các hàm tổng hợp
-        Dataset<Row> dataProduct = transformProductDf(unstructDs);
-        dataProduct.show();
-
-        topViewProduct(dataProduct);
-        topViewCategory(dataProduct);
-        topViewRange(dataProduct);
-        topPurchaseProduct(dataProduct);
-        topPurchaseCategory(dataProduct);
-        topPurchaseRange(dataProduct);
-
-        Dataset<Row> dataUser = transformUserDf(ds);
-        dataUser.show();
-
-        countUserActive(dataUser);
+//        productAnalysis(dataProduct);
+//        categoryAnalysis(dataProduct);
+//        rangeAnalysis(dataProduct);
+        viewAnalysis(data);
+//        locationAnalysis(dataProduct);
     }
 
     public static void main(String[] args) {
