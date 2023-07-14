@@ -81,6 +81,24 @@ public class MysqlService {
         return -1;
     }
 
+    public void insertProductAnalysis(long time, int productId, long numView, long numPurchase, long revenue) {
+        String sql = "INSERT INTO product_analysis (time, product_id, view, purchase, revenue) VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setInt(2, productId);
+            statement.setInt(3, (int) numView);
+            statement.setInt(4, (int) numPurchase);
+            statement.setInt(5, (int) revenue);
+
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
     public void insertViewAnalysis(long time, long numUser, long numView) {
         String sql = "INSERT INTO view_analysis (time, user, view) VALUES (?, ?, ?)";
 

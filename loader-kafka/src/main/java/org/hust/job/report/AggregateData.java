@@ -100,6 +100,7 @@ public class AggregateData {
 
         data.show();
 
+        // product analysis
         Dataset<Row> productAnalysisView = data
                 .filter("action = 'view'")
                 .groupBy("time", "product_id")
@@ -121,6 +122,18 @@ public class AggregateData {
                 .join(productAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "product_id")).seq(), "outer");
 
         productAnalysis.show();
+
+        List<Row> productAnalysisList = productAnalysis.collectAsList();
+        MysqlService mysqlService = new MysqlService();
+        for (Row row : productAnalysisList) {
+            long time = row.getLong(0);
+            int productId = row.getInt(1);
+            long numView = row.getLong(2);
+            long numPurchase = row.getLong(3);
+            long revenue = row.getLong(4);
+
+            mysqlService.insertProductAnalysis(time, productId, numView, numPurchase, revenue);
+        }
     }
 
 
