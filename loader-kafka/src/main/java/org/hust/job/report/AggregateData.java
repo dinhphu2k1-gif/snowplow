@@ -62,6 +62,10 @@ public class AggregateData {
                         List<IContext> contextList = IContext.createContext(event);
                         IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
 
+                        if (!(unstructEvent instanceof ProductAction)) {
+                            continue;
+                        }
+
                         ProductAction productAction = (ProductAction) unstructEvent;
 
                         for (IContext context : contextList) {
