@@ -128,9 +128,9 @@ public class AggregateData {
         for (Row row : productAnalysisList) {
             long time = row.getLong(0);
             int productId = row.getInt(1);
-            long numView = row.getLong(2);
-            long numPurchase = row.getLong(3);
-            long revenue = row.getLong(4);
+            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
+            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
+            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
 
             mysqlService.insertProductAnalysis(time, productId, numView, numPurchase, revenue);
         }
