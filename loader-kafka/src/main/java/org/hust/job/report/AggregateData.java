@@ -59,32 +59,38 @@ public class AggregateData {
 
                     while (t.hasNext()) {
                         Event event = t.next();
-                        List<IContext> contextList = IContext.createContext(event);
-                        IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
 
-                        if (!(unstructEvent instanceof ProductAction)) {
-                            continue;
-                        }
+                        try {
+                            List<IContext> contextList = IContext.createContext(event);
+                            IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
 
-                        ProductAction productAction = (ProductAction) unstructEvent;
-
-                        for (IContext context : contextList) {
-                            if (context instanceof ProductContext) {
-                                ProductContext productContext = (ProductContext) context;
-
-                                assert productAction != null;
-                                Row row = RowFactory.create(productAction.getAction(),
-                                        productContext.getProduct_id(),
-                                        productContext.getProduct_name(),
-                                        productContext.getQuantity(),
-                                        productContext.getPrice(),
-                                        productContext.getCategory_id(),
-                                        productContext.getPublisher_id(),
-                                        productContext.getAuthor_id());
-                                System.out.println(row);
-                                rowList.add(row);
+                            if (!(unstructEvent instanceof ProductAction)) {
+                                continue;
                             }
+
+                            ProductAction productAction = (ProductAction) unstructEvent;
+
+                            for (IContext context : contextList) {
+                                if (context instanceof ProductContext) {
+                                    ProductContext productContext = (ProductContext) context;
+
+                                    assert productAction != null;
+                                    Row row = RowFactory.create(productAction.getAction(),
+                                            productContext.getProduct_id(),
+                                            productContext.getProduct_name(),
+                                            productContext.getQuantity(),
+                                            productContext.getPrice(),
+                                            productContext.getCategory_id(),
+                                            productContext.getPublisher_id(),
+                                            productContext.getAuthor_id());
+                                    System.out.println(row);
+                                    rowList.add(row);
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
+
                     }
 
                     return rowList.iterator();
@@ -95,6 +101,7 @@ public class AggregateData {
 
     /**
      * Phân các sự kiên liên quan đến sản phẩm
+     *
      * @param df
      */
     public void productAnalysis(Dataset<Row> df) {
@@ -109,39 +116,47 @@ public class AggregateData {
 
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
-        Dataset<Row> data = df.select("time","contexts", "unstruct_event")
+        Dataset<Row> data = df.select("time", "contexts", "unstruct_event")
                 .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
                     List<Row> rowList = new ArrayList<>();
 
                     while (t.hasNext()) {
                         Row row = t.next();
 
-                        long time = row.getLong(0);
-                        String dataContexts = row.getString(1);
-                        String dataUnstruct = row.getString(2);
+                        try {
+                            long time = row.getLong(0);
+                            String dataContexts = row.getString(1);
+                            String dataUnstruct = row.getString(2);
 
-                        List<IContext> contextList = IContext.createContext(dataContexts);
-                        IUnstructEvent unstructEvent = IUnstructEvent.createEvent(dataUnstruct);
+                            List<IContext> contextList = IContext.createContext(dataContexts);
+                            IUnstructEvent unstructEvent = IUnstructEvent.createEvent(dataUnstruct);
 
-                        ProductAction productAction = (ProductAction) unstructEvent;
-
-                        for (IContext context : contextList) {
-                            if (context instanceof ProductContext) {
-                                ProductContext productContext = (ProductContext) context;
-
-                                assert productAction != null;
-                                Row record = RowFactory.create(
-                                        time,
-                                        productAction.getAction(),
-                                        productContext.getProduct_id(),
-                                        productContext.getProduct_name(),
-                                        productContext.getQuantity(),
-                                        productContext.getPrice(),
-                                        productContext.getCategory_id());
-                                rowList.add(record);
+                            if (!(unstructEvent instanceof ProductAction)) {
+                                continue;
                             }
-                        }
 
+                            ProductAction productAction = (ProductAction) unstructEvent;
+
+                            for (IContext context : contextList) {
+                                if (context instanceof ProductContext) {
+                                    ProductContext productContext = (ProductContext) context;
+
+                                    assert productAction != null;
+                                    Row record = RowFactory.create(
+                                            time,
+                                            productAction.getAction(),
+                                            productContext.getProduct_id(),
+                                            productContext.getProduct_name(),
+                                            productContext.getQuantity(),
+                                            productContext.getPrice(),
+                                            productContext.getCategory_id());
+                                    rowList.add(record);
+                                }
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
 
                     return rowList.iterator();
@@ -211,6 +226,7 @@ public class AggregateData {
 
     /**
      * Chuẩn hóa và bổ sung thông tin cho trường còn thiếu
+     *
      * @return
      */
     public Dataset<Row> preProcess(Dataset<Row> df) {
@@ -224,7 +240,7 @@ public class AggregateData {
                 .add("domain_userid", DataTypes.StringType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
-        WindowSpec windowSpec  = Window.partitionBy("domain_userid").orderBy(col("user_id").desc());
+        WindowSpec windowSpec = Window.partitionBy("domain_userid").orderBy(col("user_id").desc());
         Dataset<Row> mapping = df.filter("event = 'page_view'")
                 .select("user_id", "domain_userid")
                 .distinct()
