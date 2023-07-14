@@ -129,15 +129,43 @@ public class AggregateData {
      * @param df
      */
     public void viewAnalysis(Dataset<Row> df) {
+        Dataset<Row> data = df.filter("event = 'page_view'");
+
+        System.out.println("num record: " + data.count());
+        data.show();
+
+        Dataset<Row> result = data.groupBy("time")
+                .agg(countDistinct("user_id").as("num_user"),
+                        count("*").as("count_view"));
+
+        result.show();
+    }
+
+    /**
+     * @param df
+     */
+    public void locationAnalysis(Dataset<Row> df) {
+        Dataset<Row> res = df.filter("action = 'purchase'")
+                .groupBy("category_id")
+                .agg(count("*").as("num_purchase"));
+
+        res.show();
+    }
+
+    /**
+     * Chuẩn hóa và bổ sung thông tin cho trường còn thiếu
+     * @return
+     */
+    public Dataset<Row> preProcess(Dataset<Row> df) {
+        // chuẩn hóa time về cùng 1 giơ trong ngày
+        spark.udf().register("parseTime", (UDF1<Long, Long>) DateTimeUtils::getCeilTime, DataTypes.LongType);
+        Dataset<Row> data = df.withColumn("time", call_udf("parseTime", col("dvce_created_tstamp")));
+
+        // bổ sung thông tin cho trường user_id
         StructType schema = new StructType()
                 .add("user_id", DataTypes.StringType, false)
                 .add("domain_userid", DataTypes.StringType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
-
-        df.filter("event = 'page_view'")
-                .select("user_id", "domain_userid")
-                .distinct()
-                .show();
 
         WindowSpec windowSpec  = Window.partitionBy("domain_userid").orderBy(col("user_id").desc());
         Dataset<Row> mapping = df.filter("event = 'page_view'")
@@ -174,42 +202,23 @@ public class AggregateData {
                 }, encoder)
                 .distinct();
 
-        mapping.show();
-
-        Dataset<Row> data = df.filter("event = 'page_view'")
+        data = data
                 .drop("user_id")
-                .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq())
-                .persist(StorageLevel.MEMORY_AND_DISK());
+                .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq());
 
-        System.out.println("num record: " + df.filter("event = 'page_view'").count());
-        System.out.println("num record: " + data.count());
-        data.show();
-
-        Dataset<Row> result = data.groupBy("time")
-                .agg(countDistinct("user_id").as("num_user"),
-                        count("*").as("count_view"));
-
-        result.show();
-    }
-
-    /**
-     * @param df
-     */
-    public void locationAnalysis(Dataset<Row> df) {
-        Dataset<Row> res = df.filter("action = 'purchase'")
-                .groupBy("category_id")
-                .agg(count("*").as("num_purchase"));
-
-        res.show();
+        return data;
     }
 
     public void run() {
         String path = "hdfs://172.19.0.20:9000/data/event/" + DateTimeUtils.getDate() + "/*";
         System.out.println(path);
 
-        spark.udf().register("parseTime", (UDF1<Long, Long>) DateTimeUtils::getCeilTime, DataTypes.LongType);
+
         Dataset<Row> data = spark.read().parquet(path);
-        data = data.withColumn("time", call_udf("parseTime", col("dvce_created_tstamp")));
+        System.out.println("num record before: " + data.count());
+        data = preProcess(data);
+        System.out.println("num record after: " + data.count());
+
 
 //        productAnalysis(dataProduct);
 //        categoryAnalysis(dataProduct);
