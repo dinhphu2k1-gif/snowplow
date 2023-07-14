@@ -2,6 +2,7 @@ package org.hust.job.report;
 
 import org.apache.spark.api.java.function.MapPartitionsFunction;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
 import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.types.DataTypes;
@@ -12,17 +13,21 @@ import org.hust.model.event.Event;
 import org.hust.model.event.unstruct.IUnstructEvent;
 import org.hust.model.event.unstruct.impl.ProductAction;
 import org.hust.model.event.unstruct.impl.SearchAction;
+import org.hust.service.mysql.MysqlService;
 import org.hust.utils.DateTimeUtils;
 import org.hust.utils.SparkUtils;
+import scala.collection.JavaConverters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.apache.spark.sql.functions.*;
 
 public class AggregateData {
-    private SparkUtils sparkUtils;
-    private SparkSession spark;
+    private final SparkUtils sparkUtils;
+    private final SparkSession spark;
 
     public AggregateData() {
         sparkUtils = new SparkUtils("aggregate data", "yarn", 60);
@@ -82,7 +87,6 @@ public class AggregateData {
     }
 
     /**
-     *
      * @param df
      */
     public void productAnalysis(Dataset<Row> df) {
@@ -94,7 +98,6 @@ public class AggregateData {
     }
 
     /**
-     *
      * @param df
      */
     public void categoryAnalysis(Dataset<Row> df) {
@@ -106,7 +109,6 @@ public class AggregateData {
     }
 
     /**
-     *
      * @param df
      */
     public void rangeAnalysis(Dataset<Row> df) {
@@ -121,17 +123,58 @@ public class AggregateData {
     }
 
     /**
-     *
      * @param df
      */
     public void viewAnalysis(Dataset<Row> df) {
-        Dataset<Row> data = df.filter("event = 'page_view'");
+        StructType schema = new StructType()
+                .add("user_id", DataTypes.StringType, false)
+                .add("domain_userid", DataTypes.StringType, false);
+        ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
+        Dataset<Row> mapping = df.filter("event = 'page_view'")
+                .select("user_id", "domain_userid")
+                .distinct()
+                .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
+                    List<Row> rowList = new ArrayList<>();
+                    MysqlService mysqlService = new MysqlService();
 
+                    while (t.hasNext()) {
+                        Row row = t.next();
+
+                        try {
+                            String user_id = row.getString(0);
+                            String domain_userid = row.getString(1);
+
+                            if (!user_id.equals("")) {
+                                user_id = String.valueOf(mysqlService.getUserId(domain_userid));
+
+                                if (user_id.equals("-1")) {
+                                    user_id = domain_userid;
+                                }
+                            }
+
+                            rowList.add(RowFactory.create(user_id, domain_userid));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    return rowList.iterator();
+                }, encoder)
+                .distinct();
+
+        Dataset<Row> data = df.filter("event = 'page_view'")
+                .drop("user_id")
+                .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq());
+
+        Dataset<Row> result = data.groupBy("time")
+                .agg(countDistinct("user_id").as("num_user"),
+                        count("*").as("count_view"));
+
+        result.show();
     }
 
     /**
-     *
      * @param df
      */
     public void locationAnalysis(Dataset<Row> df) {
@@ -146,7 +189,9 @@ public class AggregateData {
         String path = "hdfs://172.19.0.20:9000/data/event/" + DateTimeUtils.getDate() + "/*";
         System.out.println(path);
 
+        spark.udf().register("parseTime", (UDF1<Long, Long>) DateTimeUtils::getCeilTime, DataTypes.LongType);
         Dataset<Row> data = spark.read().parquet(path);
+        data = data.withColumn("time", call_udf("parseTime", col("dvce_created_tstamp")));
 
 //        productAnalysis(dataProduct);
 //        categoryAnalysis(dataProduct);

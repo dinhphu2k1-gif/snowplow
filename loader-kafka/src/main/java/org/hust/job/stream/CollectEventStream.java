@@ -107,9 +107,10 @@ public class CollectEventStream implements IJobBuilder {
                     .filter(Objects::nonNull);
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
-            ds.select("user_id", "contexts", "unstruct_event").show();
+            ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
+                    "user_id", "user_ipaddress", "domain_userid",  "geo_city", "contexts", "unstruct_event").show();
 
-            insertIntoEs(ds);
+//            insertIntoEs(ds);
             insertMapping(ds);
         });
 

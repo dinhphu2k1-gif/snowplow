@@ -87,7 +87,7 @@ public class MysqlService {
 
 //        System.out.println(mysqlService.checkExistMapping(1, "123"));
 //        mysqlService.insertMapping(1, "1234");
-        System.out.println(mysqlService.getUserId("1234"));
+        System.out.println(mysqlService.getUserId("12"));
         mysqlService.close();
     }
 }
