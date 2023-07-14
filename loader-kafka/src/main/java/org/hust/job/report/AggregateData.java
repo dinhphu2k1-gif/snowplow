@@ -132,6 +132,11 @@ public class AggregateData {
                 .add("domain_userid", DataTypes.StringType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
+        df.filter("event = 'page_view'")
+                .select("user_id", "domain_userid")
+                .distinct()
+                .show();
+
         Dataset<Row> mapping = df.filter("event = 'page_view'")
                 .select("user_id", "domain_userid")
                 .distinct()
@@ -146,7 +151,7 @@ public class AggregateData {
                             String user_id = row.getString(0);
                             String domain_userid = row.getString(1);
 
-                            if (!user_id.equals("")) {
+                            if (user_id.equals("")) {
                                 user_id = String.valueOf(mysqlService.getUserId(domain_userid));
 
                                 if (user_id.equals("-1")) {
