@@ -38,71 +38,7 @@ public class AggregateData {
     }
 
     /**
-     * Lọc data product và hành động liên quan đến product đó
-     */
-    public Dataset<Row> transformProductDf(Dataset<Event> ds) {
-        StructType schema = new StructType()
-                .add("action", DataTypes.StringType, true)
-                .add("product_id", DataTypes.IntegerType, true)
-                .add("product_name", DataTypes.StringType, true)
-                .add("quantity", DataTypes.IntegerType, true)
-                .add("price", DataTypes.IntegerType, true)
-                .add("category_id", DataTypes.IntegerType, true)
-                .add("publisher_id", DataTypes.IntegerType, true)
-                .add("author_id", DataTypes.IntegerType, true);
-        ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
-
-        Dataset<Row> df = ds
-                .filter("event_name = 'product_action'")
-                .mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
-                    List<Row> rowList = new ArrayList<>();
-
-                    while (t.hasNext()) {
-                        Event event = t.next();
-
-                        try {
-                            List<IContext> contextList = IContext.createContext(event);
-                            IUnstructEvent unstructEvent = IUnstructEvent.createEvent(event);
-
-                            if (!(unstructEvent instanceof ProductAction)) {
-                                continue;
-                            }
-
-                            ProductAction productAction = (ProductAction) unstructEvent;
-
-                            for (IContext context : contextList) {
-                                if (context instanceof ProductContext) {
-                                    ProductContext productContext = (ProductContext) context;
-
-                                    assert productAction != null;
-                                    Row row = RowFactory.create(productAction.getAction(),
-                                            productContext.getProduct_id(),
-                                            productContext.getProduct_name(),
-                                            productContext.getQuantity(),
-                                            productContext.getPrice(),
-                                            productContext.getCategory_id(),
-                                            productContext.getPublisher_id(),
-                                            productContext.getAuthor_id());
-                                    System.out.println(row);
-                                    rowList.add(row);
-                                }
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-
-                    return rowList.iterator();
-                }, encoder);
-
-        return df;
-    }
-
-    /**
-     * Phân các sự kiên liên quan đến sản phẩm
-     *
-     * @param df
+     * Phân tích các sự kiên liên quan đến sản phẩm
      */
     public void productAnalysis(Dataset<Row> df) {
         StructType schema = new StructType()
@@ -163,32 +99,30 @@ public class AggregateData {
                 }, encoder);
 
         data.show();
+
+        Dataset<Row> productAnalysisView = data
+                .filter("action = 'view'")
+                .groupBy("time", "product_id")
+                .agg(count("*").as("view"));
+
+        Dataset<Row> productAnalysisPurchase = data
+                .filter("action = 'purchase'")
+                .groupBy("time", "product_id")
+                .agg(count("*").as("purchase"));
+
+        Dataset<Row> productAnalysisRevenue = data
+                .withColumn("revenue", col("quantity").multiply(col("price")))
+                .filter("action = 'view'")
+                .groupBy("time", "product_id")
+                .agg(sum("revenue").as("total_revenue"));
+
+        Dataset<Row> productAnalysis = productAnalysisView
+                .join(productAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "product_id")).seq(), "outer")
+                .join(productAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "product_id")).seq(), "outer");
+
+        productAnalysis.show();
     }
 
-    /**
-     * @param df
-     */
-    public void categoryAnalysis(Dataset<Row> df) {
-        Dataset<Row> res = df.filter("action = 'view'")
-                .groupBy("category_id")
-                .agg(count("*").as("num_view"));
-
-        res.show();
-    }
-
-    /**
-     * @param df
-     */
-    public void rangeAnalysis(Dataset<Row> df) {
-        Dataset<Row> res = df.filter("action = 'view'")
-                .withColumn("range", when(col("price").lt(100000), "0 - 100000")
-                        .when(col("price").geq(100000).and(col("price").lt(500000)), "100000 - 500000")
-                        .otherwise(">= 500000"))
-                .groupBy("range")
-                .agg(count("*").as("num_view"));
-
-        res.show();
-    }
 
     /**
      * @param df
@@ -217,11 +151,6 @@ public class AggregateData {
      * @param df
      */
     public void locationAnalysis(Dataset<Row> df) {
-        Dataset<Row> res = df.filter("action = 'purchase'")
-                .groupBy("category_id")
-                .agg(count("*").as("num_purchase"));
-
-        res.show();
     }
 
     /**
