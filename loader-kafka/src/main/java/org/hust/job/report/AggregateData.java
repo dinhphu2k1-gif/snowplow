@@ -5,6 +5,8 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
 import org.apache.spark.sql.catalyst.encoders.RowEncoder;
+import org.apache.spark.sql.expressions.Window;
+import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
@@ -137,9 +139,12 @@ public class AggregateData {
                 .distinct()
                 .show();
 
+        WindowSpec windowSpec  = Window.partitionBy("domain_userid").orderBy(col("user_id").desc());
         Dataset<Row> mapping = df.filter("event = 'page_view'")
                 .select("user_id", "domain_userid")
                 .distinct()
+                .withColumn("rank", row_number().over(windowSpec))
+                .filter("rank = 1")
                 .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
                     List<Row> rowList = new ArrayList<>();
                     MysqlService mysqlService = new MysqlService();
