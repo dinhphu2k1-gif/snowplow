@@ -7,6 +7,7 @@ import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
 import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.storage.StorageLevel;
 import org.hust.model.entity.IContext;
 import org.hust.model.entity.impl.ProductContext;
 import org.hust.model.event.Event;
@@ -165,7 +166,12 @@ public class AggregateData {
 
         Dataset<Row> data = df.filter("event = 'page_view'")
                 .drop("user_id")
-                .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq());
+                .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq())
+                .persist(StorageLevel.MEMORY_AND_DISK());
+
+        System.out.println("num record: " + df.filter("event = 'page_view'").count());
+        System.out.println("num record: " + data.count());
+        data.show();
 
         Dataset<Row> result = data.groupBy("time")
                 .agg(countDistinct("user_id").as("num_user"),
