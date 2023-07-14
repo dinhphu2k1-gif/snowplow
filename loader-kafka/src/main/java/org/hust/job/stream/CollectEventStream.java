@@ -82,13 +82,20 @@ public class CollectEventStream implements IJobBuilder {
             while (t.hasNext()) {
                 Row row = t.next();
 
-                int user_id = Integer.parseInt(row.getString(0));
-                String domain_userid = row.getString(1);
+                try {
+                    int user_id = Integer.parseInt(row.getString(0));
+                    String domain_userid = row.getString(1);
+                    System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
 
-                boolean exist = mysqlService.checkExistMapping(user_id, domain_userid);
-                if (!exist) {
-                    mysqlService.insertMapping(user_id, domain_userid);
+                    boolean exist = mysqlService.checkExistMapping(user_id, domain_userid);
+                    if (!exist) {
+                        mysqlService.insertMapping(user_id, domain_userid);
+                        System.out.println("insert mapping");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
             }
         });
     }
@@ -108,7 +115,7 @@ public class CollectEventStream implements IJobBuilder {
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
             ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
-                    "user_id", "user_ipaddress", "domain_userid",  "geo_city", "contexts", "unstruct_event").show();
+                    "user_id", "user_ipaddress", "domain_userid", "geo_city", "contexts", "unstruct_event").show();
 
 //            insertIntoEs(ds);
             insertMapping(ds);
