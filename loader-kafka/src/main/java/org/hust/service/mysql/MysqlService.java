@@ -81,6 +81,22 @@ public class MysqlService {
         return -1;
     }
 
+    public void insertViewAnalysis(long time, long numUser, long numView) {
+        String sql = "INSERT INTO view_analysis (time, user, view) VALUES (?, ?, ?)";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time));
+            statement.setInt(2, (int) numUser);
+            statement.setInt(3, (int) numView);
+
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
 
     public static void main(String[] args) {
         MysqlService mysqlService = new MysqlService();

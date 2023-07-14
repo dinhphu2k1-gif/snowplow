@@ -131,14 +131,21 @@ public class AggregateData {
     public void viewAnalysis(Dataset<Row> df) {
         Dataset<Row> data = df.filter("event = 'page_view'");
 
-        System.out.println("num record: " + data.count());
-        data.show();
-
         Dataset<Row> result = data.groupBy("time")
                 .agg(countDistinct("user_id").as("num_user"),
                         count("*").as("count_view"));
-
         result.show();
+
+        List<Row> rowList = result.collectAsList();
+        MysqlService mysqlService = new MysqlService();
+        for (Row row : rowList) {
+            long time = row.getLong(0);
+            long numUser = row.getLong(1);
+            long numView = row.getLong(2);
+
+            mysqlService.insertViewAnalysis(time, numUser, numView);
+        }
+
     }
 
     /**
