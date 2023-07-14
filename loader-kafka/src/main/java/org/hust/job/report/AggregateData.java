@@ -90,14 +90,60 @@ public class AggregateData {
     }
 
     /**
+     * Phân các sự kiên liên quan đến sản phẩm
      * @param df
      */
     public void productAnalysis(Dataset<Row> df) {
-        Dataset<Row> res = df.filter("action = 'view'")
-                .groupBy("product_id")
-                .agg(count("*").as("num_view"));
+        StructType schema = new StructType()
+                .add("time", DataTypes.LongType, false)
+                .add("action", DataTypes.StringType, false)
+                .add("product_id", DataTypes.IntegerType, false)
+                .add("product_name", DataTypes.StringType, true)
+                .add("quantity", DataTypes.IntegerType, false)
+                .add("price", DataTypes.IntegerType, true)
+                .add("category_id", DataTypes.IntegerType, true);
 
-        res.show();
+        ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
+
+        Dataset<Row> data = df.select("time","contexts", "unstruct_event")
+                .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
+                    List<Row> rowList = new ArrayList<>();
+
+                    while (t.hasNext()) {
+                        Row row = t.next();
+
+                        long time = row.getLong(0);
+                        String dataContexts = row.getString(1);
+                        String dataUnstruct = row.getString(2);
+
+                        List<IContext> contextList = IContext.createContext(dataContexts);
+                        IUnstructEvent unstructEvent = IUnstructEvent.createEvent(dataUnstruct);
+
+                        ProductAction productAction = (ProductAction) unstructEvent;
+
+                        for (IContext context : contextList) {
+                            if (context instanceof ProductContext) {
+                                ProductContext productContext = (ProductContext) context;
+
+                                assert productAction != null;
+                                Row record = RowFactory.create(
+                                        time,
+                                        productAction.getAction(),
+                                        productContext.getProduct_id(),
+                                        productContext.getProduct_name(),
+                                        productContext.getQuantity(),
+                                        productContext.getPrice(),
+                                        productContext.getCategory_id());
+                                rowList.add(record);
+                            }
+                        }
+
+                    }
+
+                    return rowList.iterator();
+                }, encoder);
+
+        data.show();
     }
 
     /**
@@ -227,10 +273,11 @@ public class AggregateData {
         System.out.println("num record after: " + data.count());
 
 
-//        productAnalysis(dataProduct);
+        productAnalysis(data);
 //        categoryAnalysis(dataProduct);
 //        rangeAnalysis(dataProduct);
-        viewAnalysis(data);
+//        System.out.println("****** view analysis ******");
+//        viewAnalysis(data);
 //        locationAnalysis(dataProduct);
     }
 

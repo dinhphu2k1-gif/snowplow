@@ -23,6 +23,22 @@ public interface IUnstructEvent {
         return null;
     }
 
+    static IUnstructEvent createEvent(String dataUnstruct) {
+        JSONObject unstruct_event = new JSONObject(dataUnstruct).getJSONObject("data");
+        String schema = unstruct_event.getString("schema");
+        JSONObject data = unstruct_event.getJSONObject("data");
+
+        String schema_name = new Schema(schema).getName();
+        switch (schema_name) {
+            case UnstructType.PRODUCT_ACTION:
+                return new ProductAction(data);
+            case UnstructType.SEARCH_ACTION:
+                return new SearchAction(data);
+        }
+
+        return null;
+    }
+
     /**
      * Tách thông tin trong event
      * @param data

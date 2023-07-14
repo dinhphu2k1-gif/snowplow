@@ -86,7 +86,7 @@ public class MysqlService {
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setTimestamp(1, new Timestamp(time));
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
             statement.setInt(2, (int) numUser);
             statement.setInt(3, (int) numView);
 

@@ -56,5 +56,29 @@ public interface IContext {
         return contextList;
     }
 
+    /**
+     *  Lấy danh sách các context xuất hiện trong event
+     * @param dataContexts dữ liệu context
+     * @return danh sách context
+     */
+    static List<IContext> createContext(String dataContexts) {
+        List<IContext> contextList =new ArrayList<>();
+
+        JSONObject contexts = new JSONObject(dataContexts);
+        JSONArray data = contexts.getJSONArray("data");
+
+        for (int i = 0; i < data.length(); i++) {
+            JSONObject context = data.getJSONObject(i);
+            String schema = context.getString("schema");
+
+            String schema_name = new Schema(schema).getName();
+            contextList.add(IContext.createContext(schema_name, context.getJSONObject("data")));
+        }
+
+        return contextList;
+    }
+
+
+
 
 }
