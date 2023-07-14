@@ -112,7 +112,7 @@ public class AggregateData {
 
         Dataset<Row> productAnalysisRevenue = data
                 .withColumn("revenue", col("quantity").multiply(col("price")))
-                .filter("action = 'view'")
+                .filter("action = 'purchase'")
                 .groupBy("time", "product_id")
                 .agg(sum("revenue").as("total_revenue"));
 
