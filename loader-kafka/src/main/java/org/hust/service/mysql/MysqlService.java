@@ -154,6 +154,44 @@ public class MysqlService {
         }
     }
 
+    public void deleteRangeAnalysis(long time, String range) {
+        String sql = "DELETE FROM value_analysis WHERE time = ? and range_value = ?";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setString(2, range);
+
+            // Execute the SQL statement
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    public void insertRangeAnalysis(long time, String range, long numView, long numPurchase, long revenue) {
+        // xóa các giá trị cũ đi
+        deleteRangeAnalysis(time, range);
+
+        // chèn giá trị mới vào
+        String sql = "INSERT INTO value_analysis (time, range_value, view, purchase, revenue) VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setString(2, range);
+            statement.setInt(3, (int) numView);
+            statement.setInt(4, (int) numPurchase);
+            statement.setInt(5, (int) revenue);
+
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
     public void insertViewAnalysis(long time, long numUser, long numView) {
         String sql = "INSERT INTO view_analysis (time, user, view) VALUES (?, ?, ?)";
 

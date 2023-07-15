@@ -166,11 +166,47 @@ public class AggregateData {
             long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
             long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
 
-            mysqlService.insertProductAnalysis(time, categoryId, numView, numPurchase, revenue);
+            mysqlService.insertCategoryAnalysis(time, categoryId, numView, numPurchase, revenue);
         }
 
-        //
+        // range_analysis
+        Dataset<Row> dataRange = data
+                .withColumn("range", when(col("price").lt(100000), "0 - 100000")
+                        .when(col("price").geq(100000).and(col("price").lt(300000)), "100000 - 300000")
+                        .when(col("price").geq(300000).and(col("price").lt(500000)), "300000 - 500000")
+                        .otherwise(">= 500000"));
+        Dataset<Row> rangeAnalysisView = dataRange
+                .filter("action = 'view'")
+                .groupBy("time", "range")
+                .agg(count("*").as("view"));
 
+        Dataset<Row> rangeAnalysisPurchase = dataRange
+                .filter("action = 'purchase'")
+                .groupBy("time", "range")
+                .agg(count("*").as("purchase"));
+
+        Dataset<Row> rangeAnalysisRevenue = dataRange
+                .withColumn("revenue", col("quantity").multiply(col("price")))
+                .filter("action = 'purchase'")
+                .groupBy("time", "range")
+                .agg(sum("revenue").as("total_revenue"));
+
+        Dataset<Row> rangeAnalysis = rangeAnalysisView
+                .join(rangeAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "range")).seq(), "outer")
+                .join(rangeAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "range")).seq(), "outer");
+
+        rangeAnalysis.show();
+
+        List<Row> rangeAnalysisList = rangeAnalysis.collectAsList();
+        for (Row row : rangeAnalysisList) {
+            long time = row.getLong(0);
+            String range = row.getString(1);
+            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
+            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
+            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
+
+            mysqlService.insertRangeAnalysis(time, range, numView, numPurchase, revenue);
+        }
 
     }
 
