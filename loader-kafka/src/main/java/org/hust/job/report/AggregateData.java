@@ -326,9 +326,6 @@ public class AggregateData {
 
 
         productAnalysis(data);
-//        categoryAnalysis(dataProduct);
-//        rangeAnalysis(dataProduct);
-//        System.out.println("****** view analysis ******");
         viewAnalysis(data);
         locationAnalysis(data);
     }
