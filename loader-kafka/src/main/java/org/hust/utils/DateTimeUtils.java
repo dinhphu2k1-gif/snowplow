@@ -34,7 +34,7 @@ public class DateTimeUtils implements Serializable {
     }
 
     public static long getCeilTime(long time) {
-        DateTime dateTime = new DateTime(1689347267168L);
+        DateTime dateTime = new DateTime(time);
         int hour = dateTime.getHourOfDay();
         DateTime newDateTime = dateTime.withTimeAtStartOfDay().plusHours(hour);
 
