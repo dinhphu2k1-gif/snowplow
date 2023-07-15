@@ -244,7 +244,7 @@ public class MysqlService {
     public void insertLocationAnalysis(long time, String location, long numUser, long numView) {
         deleteLocationAnalysis(time, location);
 
-        String sql = "INSERT INTO location_analysis (time,  location, user, view) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO location_analysis (time, location, user, view) VALUES (?, ?, ?, ?)";
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
