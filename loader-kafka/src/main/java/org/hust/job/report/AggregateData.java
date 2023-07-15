@@ -231,13 +231,29 @@ public class AggregateData {
 
             mysqlService.insertViewAnalysis(time, numUser, numView);
         }
-
     }
 
     /**
      * @param df
      */
     public void locationAnalysis(Dataset<Row> df) {
+        Dataset<Row> data = df.filter("event = 'page_view'");
+
+        Dataset<Row> result = data.groupBy("time", "geo_city")
+                .agg(countDistinct("user_id").as("num_user"),
+                        count("*").as("count_view"));
+        result.show();
+
+        List<Row> rowList = result.collectAsList();
+        MysqlService mysqlService = new MysqlService();
+        for (Row row : rowList) {
+            long time = row.getLong(0);
+            String location = row.getString(1);
+            long numUser = row.getLong(2);
+            long numView = row.getLong(3);
+
+            mysqlService.insertLocationAnalysis(time, location, numUser, numView);
+        }
     }
 
     /**
@@ -313,8 +329,8 @@ public class AggregateData {
 //        categoryAnalysis(dataProduct);
 //        rangeAnalysis(dataProduct);
 //        System.out.println("****** view analysis ******");
-//        viewAnalysis(data);
-//        locationAnalysis(dataProduct);
+        viewAnalysis(data);
+        locationAnalysis(data);
     }
 
     public static void main(String[] args) {

@@ -192,7 +192,24 @@ public class MysqlService {
         }
     }
 
+    public void deleteViewAnalysis(long time) {
+        String sql = "DELETE FROM view_analysis WHERE time = ? ";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+
+            // Execute the SQL statement
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
     public void insertViewAnalysis(long time, long numUser, long numView) {
+        deleteViewAnalysis(time);
+
         String sql = "INSERT INTO view_analysis (time, user, view) VALUES (?, ?, ?)";
 
         try {
@@ -200,6 +217,41 @@ public class MysqlService {
             statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
             statement.setInt(2, (int) numUser);
             statement.setInt(3, (int) numView);
+
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    public void deleteLocationAnalysis(long time, String locaiton) {
+        String sql = "DELETE FROM location_analysis WHERE time = ? and location = ?";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setString(2, locaiton);
+
+            // Execute the SQL statement
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    public void insertLocationAnalysis(long time, String location, long numUser, long numView) {
+        deleteLocationAnalysis(time, location);
+
+        String sql = "INSERT INTO location_analysis (time,  location, user, view) VALUES (?, ?, ?)";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setString(2, location);
+            statement.setInt(3, (int) numUser);
+            statement.setInt(4, (int) numView);
 
             statement.executeUpdate();
             statement.close();
