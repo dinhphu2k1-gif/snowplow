@@ -4,10 +4,7 @@ import org.hust.storage.mysql.MysqlConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
+import java.sql.*;
 
 public class MysqlService {
     private final Connection connection;
@@ -81,13 +78,71 @@ public class MysqlService {
         return -1;
     }
 
+    public void deleteProductAnalysis(long time, int productId) {
+        String sql = "DELETE FROM product_analysis WHERE time = ? and product_id = ?";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setInt(2, productId);
+
+            // Execute the SQL statement
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
     public void insertProductAnalysis(long time, int productId, long numView, long numPurchase, long revenue) {
+        // xóa các giá trị cũ đi
+        deleteProductAnalysis(time, productId);
+
+        // chèn giá trị mới vào
         String sql = "INSERT INTO product_analysis (time, product_id, view, purchase, revenue) VALUES (?, ?, ?, ?, ?)";
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
             statement.setInt(2, productId);
+            statement.setInt(3, (int) numView);
+            statement.setInt(4, (int) numPurchase);
+            statement.setInt(5, (int) revenue);
+
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    public void deleteCategoryAnalysis(long time, int categoryId) {
+        String sql = "DELETE FROM category_analysis WHERE time = ? and category_id = ?";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setInt(2, categoryId);
+
+            // Execute the SQL statement
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    public void insertCategoryAnalysis(long time, int categoryId, long numView, long numPurchase, long revenue) {
+        // xóa các giá trị cũ đi
+        deleteCategoryAnalysis(time, categoryId);
+
+        // chèn giá trị mới vào
+        String sql = "INSERT INTO category_analysis (time, category_id, view, purchase, revenue) VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, new Timestamp(time + 7 * 3600 * 1000));
+            statement.setInt(2, categoryId);
             statement.setInt(3, (int) numView);
             statement.setInt(4, (int) numPurchase);
             statement.setInt(5, (int) revenue);

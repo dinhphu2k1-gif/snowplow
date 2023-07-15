@@ -134,6 +134,44 @@ public class AggregateData {
 
             mysqlService.insertProductAnalysis(time, productId, numView, numPurchase, revenue);
         }
+
+        // cateogry analysis
+        Dataset<Row> categoryAnalysisView = data
+                .filter("action = 'view'")
+                .groupBy("time", "category_id")
+                .agg(count("*").as("view"));
+
+        Dataset<Row> categoryAnalysisPurchase = data
+                .filter("action = 'purchase'")
+                .groupBy("time", "category_id")
+                .agg(count("*").as("purchase"));
+
+        Dataset<Row> categoryAnalysisRevenue = data
+                .withColumn("revenue", col("quantity").multiply(col("price")))
+                .filter("action = 'purchase'")
+                .groupBy("time", "category_id")
+                .agg(sum("revenue").as("total_revenue"));
+
+        Dataset<Row> categoryAnalysis = categoryAnalysisView
+                .join(categoryAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "category_id")).seq(), "outer")
+                .join(categoryAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "category_id")).seq(), "outer");
+
+        categoryAnalysis.show();
+
+        List<Row> categoryAnalysisList = categoryAnalysis.collectAsList();
+        for (Row row : categoryAnalysisList) {
+            long time = row.getLong(0);
+            int categoryId = row.getInt(1);
+            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
+            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
+            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
+
+            mysqlService.insertProductAnalysis(time, categoryId, numView, numPurchase, revenue);
+        }
+
+        //
+
+
     }
 
 
