@@ -108,17 +108,25 @@ public class CollectEventStream implements IJobBuilder {
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
+            long t1 = System.currentTimeMillis();
             JavaRDD<Event> rows = consumerRecordJavaRDD
                     .map(consumerRecord -> RowFactory.create(consumerRecord.value(), consumerRecord.topic()))
                     .map(CollectEventStream::transformRow)
                     .filter(Objects::nonNull);
+            System.out.println("time create: " + (System.currentTimeMillis() - t1) + " ms");
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
+            System.out.println("num record: " + ds.count());
             ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid", "geo_city", "contexts", "unstruct_event").show();
 
-//            insertIntoEs(ds);
+            long t2 = System.currentTimeMillis();
+            insertIntoEs(ds);
+            System.out.println("time insert es: " + (System.currentTimeMillis() - t2) + " ms");
+
+            long t3 = System.currentTimeMillis();
             insertMapping(ds);
+            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
         });
 
         // start
