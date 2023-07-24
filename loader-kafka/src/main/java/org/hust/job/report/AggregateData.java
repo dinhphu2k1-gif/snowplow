@@ -307,6 +307,9 @@ public class AggregateData {
                 }, encoder)
                 .distinct();
 
+        data.show();
+        mapping.show();
+
         data = data
                 .drop("user_id")
                 .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq());
