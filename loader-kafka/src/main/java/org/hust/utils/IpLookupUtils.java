@@ -17,8 +17,8 @@ public class IpLookupUtils implements Serializable {
         if (reader == null) {
             synchronized (IpLookupUtils.class) {
                 if (reader == null) {
-//                    File database = new File(ConfigInfo.GEOLITE2_CITY);
-                    File database = new File("/home/phukaioh/DATN/snowplow/loader-kafka/src/main/resources/GeoLite2-City.mmdb");
+                    File database = new File(ConfigInfo.GEOLITE2_CITY);
+//                    File database = new File("/home/dinhphu/Documents/snowplow/loader-kafka/src/main/resources/GeoLite2-City.mmdb");
                     try {
                         reader = new DatabaseReader.Builder(database).build();
                     } catch (IOException e) {
@@ -134,6 +134,6 @@ public class IpLookupUtils implements Serializable {
     }
 
     public static void main(String[] args) {
-        System.out.println(IpLookupUtils.convertIpTo(Type.CITY, "20.196.245.32"));
+        System.out.println(IpLookupUtils.convertIpTo(Type.CITY, "117.4.252.x"));
     }
 }

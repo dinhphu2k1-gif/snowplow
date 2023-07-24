@@ -30,7 +30,7 @@ public class CollectEventBatch implements IJobBuilder {
     }
 
     public void init() {
-        sparkUtils = new SparkUtils("collect event", "yarn", args.getDuration());
+        sparkUtils = new SparkUtils("collect event to log", "yarn", args.getDuration());
         spark = sparkUtils.getSparkSession();
 
         KafkaUtils kafkaUtils = new KafkaUtils(args.getGroupId(), topicList);
@@ -63,17 +63,21 @@ public class CollectEventBatch implements IJobBuilder {
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
             Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
-                    "user_id", "user_ipaddress", "domain_userid",  "geo_city", "contexts", "unstruct_event");
+                    "user_id", "user_ipaddress", "domain_userid",  "geo_city", "contexts", "unstruct_event")
+                    .persist();
 
+            System.out.println("num record: " + data.count());
             data.show();
 
             String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).plusHours(7).toDate());
-            String path = "hdfs://172.19.0.20:9000/data/event/" + dateTime;
+            String path = "hdfs://hadoop23202:9000/user/phuld/data/event/" + dateTime;
             data.coalesce(1)
                     .write()
                     .parquet(path);
 
             System.out.println("write to: " + path);
+
+            data.unpersist();
         });
 
         // start

@@ -9,7 +9,7 @@ import java.util.List;
 public class HostUtils {
     public static String getKafkaHost() {
         return System.getenv("BOOTSTRAP_SERVERS") == null
-                ? "172.19.0.8:9092,172.19.0.9:9092"
+                ? "20.214.141.95:9092,52.231.108.82:9092"
                 : System.getenv("BOOTSTRAP_SERVERS");
     }
 
@@ -18,7 +18,8 @@ public class HostUtils {
         if (addressString == null) {
 
             return new HttpHost[]{
-                    new HttpHost("172.19.0.10", 9200, "http")
+                    new HttpHost("20.214.141.95", 9200, "http"),
+                    new HttpHost("52.231.108.82", 9200, "http")
             };
         } else {
             List<String> addressList = Arrays.asList(addressString.split(","));
@@ -39,7 +40,7 @@ public class HostUtils {
 
     public static String getMysqlHost() {
         return System.getenv("MYSQL_HOST") == null
-                ? "172.19.0.2"
+                ? "52.231.108.82"
                 : System.getenv("MYSQL_HOST");
     }
 }

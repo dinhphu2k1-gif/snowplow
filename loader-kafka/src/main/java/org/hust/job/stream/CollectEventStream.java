@@ -33,7 +33,7 @@ public class CollectEventStream implements IJobBuilder {
     }
 
     public void init() {
-        sparkUtils = new SparkUtils("collect event", "yarn", args.getDuration());
+        sparkUtils = new SparkUtils("collect event to es", "yarn", args.getDuration());
         spark = sparkUtils.getSparkSession();
 
         KafkaUtils kafkaUtils = new KafkaUtils(args.getGroupId(), topicList);
