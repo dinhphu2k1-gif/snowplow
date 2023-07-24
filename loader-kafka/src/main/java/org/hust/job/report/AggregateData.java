@@ -273,11 +273,15 @@ public class AggregateData {
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
         WindowSpec windowSpec = Window.partitionBy("domain_userid").orderBy(col("user_id").desc());
-        Dataset<Row> mapping = df.filter("event = 'page_view'")
+        Dataset<Row> filter = df.filter("event = 'page_view'")
                 .select("user_id", "domain_userid")
                 .distinct()
                 .withColumn("rank", row_number().over(windowSpec))
-                .filter("rank = 1")
+                .filter("rank = 1");
+        filter.show();
+
+        Dataset<Row> mapping = filter
+                .repartition(20)
                 .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
                     List<Row> rowList = new ArrayList<>();
                     MysqlService mysqlService = new MysqlService();
