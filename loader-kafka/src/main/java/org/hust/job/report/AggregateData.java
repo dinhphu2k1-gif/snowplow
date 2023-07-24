@@ -297,6 +297,8 @@ public class AggregateData {
                                 }
                             }
 
+                            System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
+
                             rowList.add(RowFactory.create(user_id, domain_userid));
                         } catch (Exception e) {
                             e.printStackTrace();
