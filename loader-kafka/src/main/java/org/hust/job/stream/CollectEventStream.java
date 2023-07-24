@@ -108,7 +108,7 @@ public class CollectEventStream implements IJobBuilder {
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
-            OffsetRange[] offsetRanges = ((HasOffsetRanges) consumerRecordJavaRDD.rdd()).offsetRanges();
+//            OffsetRange[] offsetRanges = ((HasOffsetRanges) consumerRecordJavaRDD.rdd()).offsetRanges();
 
             String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).plusHours(7).toDate());
             System.out.println("time: " + dateTime);
@@ -129,13 +129,13 @@ public class CollectEventStream implements IJobBuilder {
             insertIntoEs(ds);
             System.out.println("time insert es: " + (System.currentTimeMillis() - t2) + " ms");
 
-            long t3 = System.currentTimeMillis();
-            insertMapping(ds);
-            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
+//            long t3 = System.currentTimeMillis();
+//            insertMapping(ds);
+//            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
 
             ds.unpersist();
 
-            ((CanCommitOffsets) stream.inputDStream()).commitAsync(offsetRanges);
+//            ((CanCommitOffsets) stream.inputDStream()).commitAsync(offsetRanges);
         });
 
         // start
