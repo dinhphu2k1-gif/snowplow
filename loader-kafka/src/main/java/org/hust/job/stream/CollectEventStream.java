@@ -4,8 +4,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.*;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
-import org.apache.spark.streaming.kafka010.ConsumerStrategies;
-import org.apache.spark.streaming.kafka010.LocationStrategies;
+import org.apache.spark.streaming.kafka010.*;
 import org.hust.job.ArgsOptional;
 import org.hust.job.IJobBuilder;
 import org.hust.loader.IRecord;
@@ -15,6 +14,7 @@ import org.hust.model.event.EventType;
 import org.hust.service.mysql.MysqlService;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
+import org.joda.time.DateTime;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -108,14 +108,19 @@ public class CollectEventStream implements IJobBuilder {
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
-            long t1 = System.currentTimeMillis();
+            OffsetRange[] offsetRanges = ((HasOffsetRanges) consumerRecordJavaRDD.rdd()).offsetRanges();
+
+            String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).plusHours(7).toDate());
+            System.out.println("time: " + dateTime);
+
             JavaRDD<Event> rows = consumerRecordJavaRDD
                     .map(consumerRecord -> RowFactory.create(consumerRecord.value(), consumerRecord.topic()))
                     .map(CollectEventStream::transformRow)
                     .filter(Objects::nonNull);
-            System.out.println("time create: " + (System.currentTimeMillis() - t1) + " ms");
 
-            Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
+            Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder)
+                    .repartition(20)
+                    .persist();
             System.out.println("num record: " + ds.count());
             ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid", "geo_city", "contexts", "unstruct_event").show();
@@ -127,6 +132,10 @@ public class CollectEventStream implements IJobBuilder {
             long t3 = System.currentTimeMillis();
             insertMapping(ds);
             System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
+
+            ds.unpersist();
+
+            ((CanCommitOffsets) stream.inputDStream()).commitAsync(offsetRanges);
         });
 
         // start
