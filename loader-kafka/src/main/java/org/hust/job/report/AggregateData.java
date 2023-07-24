@@ -273,7 +273,7 @@ public class AggregateData {
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
         WindowSpec windowSpec = Window.partitionBy("domain_userid").orderBy(col("user_id").desc());
-        Dataset<Row> filter = df.filter("event = 'page_view'")
+        Dataset<Row> filter = df
                 .select("user_id", "domain_userid")
                 .distinct()
                 .withColumn("rank", row_number().over(windowSpec))
