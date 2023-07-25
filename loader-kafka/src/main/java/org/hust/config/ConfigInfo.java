@@ -26,5 +26,5 @@ public class ConfigInfo {
         public final static String MYSQL_PASSWORD = "package1107N";
     }
 
-    public final static String GEOLITE2_CITY = "/home/phuld/snowplow/loader-kafka/properties/GeoLite2-City.mmdb";
+    public final static String GEOLITE2_CITY = "./GeoLite2-City.mmdb";
 }
