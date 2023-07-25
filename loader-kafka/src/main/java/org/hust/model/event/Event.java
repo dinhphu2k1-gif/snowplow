@@ -421,12 +421,12 @@ public class Event implements Serializable {
         domain_userid = propertyIndex[15];
         domain_sessionid = propertyIndex[16];
         network_userid = propertyIndex[17];
-        geo_country = IpLookupUtils.convertIpTo(IpLookupUtils.Type.COUNTRY, user_ipaddress);
+        geo_country = propertyIndex[18];
         geo_region = propertyIndex[19];
-        geo_city = IpLookupUtils.convertIpTo(IpLookupUtils.Type.CITY, user_ipaddress);
-        geo_zipcode = IpLookupUtils.convertIpTo(IpLookupUtils.Type.ZIP_CODE, user_ipaddress);
-        geo_latitude = IpLookupUtils.convertIpTo(IpLookupUtils.Type.LATITUDE, user_ipaddress);
-        geo_longitude = IpLookupUtils.convertIpTo(IpLookupUtils.Type.LONGTITUDE, user_ipaddress);
+        geo_city =  propertyIndex[20];
+        geo_zipcode =  propertyIndex[21];
+        geo_latitude =  propertyIndex[22];
+        geo_longitude =  propertyIndex[23];
         geo_region_name = propertyIndex[24];
         ip_isp = propertyIndex[25];
         ip_organization = propertyIndex[26];
