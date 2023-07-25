@@ -1,6 +1,5 @@
 package org.hust.job.stream;
 
-import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -18,6 +17,7 @@ import org.hust.loader.kafka.elasticsearch.InsertDocument;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
 import org.hust.service.mysql.MysqlService;
+import org.hust.utils.DatabaseReader;
 import org.hust.utils.IpLookupUtils;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;

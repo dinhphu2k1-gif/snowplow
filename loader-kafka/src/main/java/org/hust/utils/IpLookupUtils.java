@@ -1,6 +1,5 @@
 package org.hust.utils;
 
-import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.record.Location;
 import org.hust.config.ConfigInfo;
