@@ -129,9 +129,9 @@ public class CollectEventStream implements IJobBuilder {
             insertIntoEs(ds);
             System.out.println("time insert es: " + (System.currentTimeMillis() - t2) + " ms");
 
-//            long t3 = System.currentTimeMillis();
-//            insertMapping(ds);
-//            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
+            long t3 = System.currentTimeMillis();
+            insertMapping(ds);
+            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
 
             ds.unpersist();
 
