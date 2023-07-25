@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 @Getter
 public class MaxMindWrapper implements Serializable {
-    private final DatabaseReader reader;
+    private transient final DatabaseReader reader;
 
     public MaxMindWrapper() {
         reader = IpLookupUtils.getReader();
