@@ -17,8 +17,8 @@ public class IpLookupUtils implements Serializable {
         if (reader == null) {
             synchronized (IpLookupUtils.class) {
                 if (reader == null) {
-                    File database = new File(ConfigInfo.GEOLITE2_CITY);
-//                    File database = new File("/home/phukaioh/DATN/snowplow/loader-kafka/src/main/resources/GeoLite2-City.mmdb");
+//                    File database = new File(ConfigInfo.GEOLITE2_CITY);
+                    File database = new File("~/snowplow/loader-kafka/properties/GeoLite2-City.mmdb");
                     try {
                         reader = new DatabaseReader.Builder(database).build();
                     } catch (IOException e) {
