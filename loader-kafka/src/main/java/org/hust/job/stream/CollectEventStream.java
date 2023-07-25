@@ -1,12 +1,12 @@
 package org.hust.job.stream;
 
+import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
-import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.kafka010.*;
@@ -17,10 +17,10 @@ import org.hust.loader.kafka.elasticsearch.InsertDocument;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
 import org.hust.service.mysql.MysqlService;
-import org.hust.utils.DatabaseReader;
 import org.hust.utils.IpLookupUtils;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
+import org.hust.utils.maxmind.MaxMindWrapper;
 import org.joda.time.DateTime;
 
 import java.net.InetAddress;
@@ -117,8 +117,8 @@ public class CollectEventStream implements IJobBuilder {
         init();
 
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
-        DatabaseReader reader = IpLookupUtils.getReader();
-        Broadcast<DatabaseReader> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(reader);
+        MaxMindWrapper maxMindWrapper = new MaxMindWrapper();
+        Broadcast<MaxMindWrapper> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(maxMindWrapper);
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
 //            OffsetRange[] offsetRanges = ((HasOffsetRanges) consumerRecordJavaRDD.rdd()).offsetRanges();
@@ -139,7 +139,7 @@ public class CollectEventStream implements IJobBuilder {
             spark.udf().register("getCity", (UDF1<String, String>) ip -> {
                 try {
                     InetAddress inetAddress = InetAddress.getByName(ip);
-                    CityResponse response = readerBroadcast.getValue().city(inetAddress);
+                    CityResponse response = readerBroadcast.getValue().getReader().city(inetAddress);
 
                     return response.getCity().getName();
                 } catch (Exception e) {
