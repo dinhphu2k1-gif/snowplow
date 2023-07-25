@@ -150,7 +150,7 @@ public class CollectEventStream implements IJobBuilder {
             }, DataTypes.StringType);
 
             ds = ds.drop("geo_city")
-                            .withColumn("geo-city", call_udf("getCity", col("user_ipaddress")));
+                            .withColumn("geo_city", call_udf("getCity", col("user_ipaddress")));
 
             ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid", "geo_city", "contexts", "unstruct_event").show();
