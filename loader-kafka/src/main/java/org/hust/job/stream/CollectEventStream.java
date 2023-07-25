@@ -131,7 +131,7 @@ public class CollectEventStream implements IJobBuilder {
                     .map(CollectEventStream::transformRow)
                     .filter(Objects::nonNull);
 
-            Dataset<Row> ds = spark.createDataFrame(rows.rdd(), Event.class)
+            Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder)
                     .repartition(20)
                     .persist();
             System.out.println("num record: " + ds.count());
@@ -149,19 +149,16 @@ public class CollectEventStream implements IJobBuilder {
                 return null;
             }, DataTypes.StringType);
 
-            ds = ds.drop("geo_city")
-                            .withColumn("geo_city", call_udf("getCity", col("user_ipaddress")));
-
             ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid", "geo_city", "contexts", "unstruct_event").show();
 
-//            long t2 = System.currentTimeMillis();
-//            insertIntoEs(ds);
-//            System.out.println("time insert es: " + (System.currentTimeMillis() - t2) + " ms");
-//
-//            long t3 = System.currentTimeMillis();
-//            insertMapping(ds);
-//            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
+            long t2 = System.currentTimeMillis();
+            insertIntoEs(ds);
+            System.out.println("time insert es: " + (System.currentTimeMillis() - t2) + " ms");
+
+            long t3 = System.currentTimeMillis();
+            insertMapping(ds);
+            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
 
             ds.unpersist();
 
