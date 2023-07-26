@@ -117,8 +117,7 @@ public class CollectEventStream implements IJobBuilder {
         init();
 
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
-        MaxMindWrapper maxMindWrapper = new MaxMindWrapper();
-        Broadcast<MaxMindWrapper> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(maxMindWrapper);
+
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
 //            OffsetRange[] offsetRanges = ((HasOffsetRanges) consumerRecordJavaRDD.rdd()).offsetRanges();
@@ -135,19 +134,6 @@ public class CollectEventStream implements IJobBuilder {
                     .repartition(20)
                     .persist();
             System.out.println("num record: " + ds.count());
-
-            spark.udf().register("getCity", (UDF1<String, String>) ip -> {
-                try {
-                    InetAddress inetAddress = InetAddress.getByName(ip);
-                    CityResponse response = readerBroadcast.getValue().getReader().city(inetAddress);
-
-                    return response.getCity().getName();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                return null;
-            }, DataTypes.StringType);
 
             ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid", "geo_city", "contexts", "unstruct_event").show();

@@ -1,8 +1,12 @@
 package org.hust.job.stream;
 
+import com.maxmind.geoip2.model.CityResponse;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.api.java.UDF1;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
@@ -11,8 +15,10 @@ import org.hust.job.IJobBuilder;
 import org.hust.model.event.Event;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
+import org.hust.utils.maxmind.MaxMindWrapper;
 import org.joda.time.DateTime;
 
+import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -54,6 +60,8 @@ public class CollectEventBatch implements IJobBuilder {
         init();
 
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
+        MaxMindWrapper maxMindWrapper = new MaxMindWrapper();
+        Broadcast<MaxMindWrapper> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(maxMindWrapper);
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
@@ -62,6 +70,23 @@ public class CollectEventBatch implements IJobBuilder {
                     .filter(Objects::nonNull);
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
+
+            spark.udf().register("getCity", (UDF1<String, String>) ip -> {
+                ip = ip.substring(0, ip.length() - 1) + 1;
+
+                try {
+                    InetAddress inetAddress = InetAddress.getByName(ip);
+                    CityResponse response = readerBroadcast.getValue().getReader().city(inetAddress);
+
+                    return response.getCity().getName();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }, DataTypes.StringType);
+
+
             Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid",  "geo_city", "contexts", "unstruct_event")
                     .persist();
@@ -69,10 +94,11 @@ public class CollectEventBatch implements IJobBuilder {
             System.out.println("num record: " + data.count());
             data.show();
 
-            String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).plusHours(7).toDate());
+            String dateTime = dateTimeFormat.format(new DateTime(time.milliseconds()).toDate());
             String path = "hdfs://hadoop23202:9000/user/phuld/data/event/" + dateTime;
             data.coalesce(1)
                     .write()
+                    .mode(SaveMode.Append)
                     .parquet(path);
 
             System.out.println("write to: " + path);
