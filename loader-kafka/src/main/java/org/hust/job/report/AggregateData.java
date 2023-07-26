@@ -327,7 +327,7 @@ public class AggregateData {
 
         dataUnknowUserId = dataUnknowUserId
                 .drop("user_id")
-                .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq());
+                .join(mapping, JavaConverters.asScalaBuffer(Collections.singletonList("domain_userid")).seq(), "left");
 
         Dataset<Row> dataPreprocess = dataKnowUserId
                 .unionByName(dataUnknowUserId);
