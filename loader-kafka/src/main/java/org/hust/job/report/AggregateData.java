@@ -239,7 +239,7 @@ public class AggregateData {
     public void locationAnalysis(Dataset<Row> df) {
         Dataset<Row> data = df.filter("event = 'page_view'");
 
-        Dataset<Row> result = data.groupBy("time", "geo_city")
+        Dataset<Row> result = data.groupBy("time", "geo-city")
                 .agg(countDistinct("user_id").as("num_user"),
                         count("*").as("count_view"));
         result.show();
