@@ -65,7 +65,7 @@ public class CollectEventBatch implements IJobBuilder {
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
         MaxMindWrapper maxMindWrapper = new MaxMindWrapper();
         Broadcast<MaxMindWrapper> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(maxMindWrapper);
-        System.out.println(maxMindWrapper.getReader());
+        System.out.println("reader: " + maxMindWrapper.getReader());
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
