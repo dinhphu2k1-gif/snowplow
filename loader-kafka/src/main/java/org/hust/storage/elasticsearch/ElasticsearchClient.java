@@ -1,6 +1,9 @@
 package org.hust.storage.elasticsearch;
 
-import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.hust.config.ConfigInfo;
@@ -17,10 +20,17 @@ public class ElasticsearchClient {
         if (esClient == null) {
             synchronized (ElasticsearchClient.class) {
                 if (esClient == null) {
+                    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                    credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elastic", "MagicWord"));
+
                     esClient = new RestHighLevelClient(
-                            RestClient.builder(
-                                    ConfigInfo.Elasticsearch.ES_HOST
-                            ));
+                            RestClient
+                                    .builder(
+                                            ConfigInfo.Elasticsearch.ES_HOST
+                                    )
+                                    .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
+                                            .setSSLHostnameVerifier((hostname, session) -> true))
+                    );
                 }
             }
         }
