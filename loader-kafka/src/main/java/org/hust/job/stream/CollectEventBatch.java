@@ -22,6 +22,9 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static org.apache.spark.sql.functions.call_udf;
+import static org.apache.spark.sql.functions.col;
+
 public class CollectEventBatch implements IJobBuilder {
     private SparkUtils sparkUtils;
     private SparkSession spark;
@@ -88,7 +91,8 @@ public class CollectEventBatch implements IJobBuilder {
 
 
             Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
-                    "user_id", "user_ipaddress", "domain_userid",  "geo_city", "contexts", "unstruct_event")
+                    "user_id", "user_ipaddress", "domain_userid", "contexts", "unstruct_event")
+                    .withColumn("geo_city", call_udf("getCity", col("user_ipaddress")))
                     .persist();
 
             System.out.println("num record: " + data.count());
