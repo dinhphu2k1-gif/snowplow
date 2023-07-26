@@ -65,6 +65,7 @@ public class CollectEventBatch implements IJobBuilder {
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
         MaxMindWrapper maxMindWrapper = new MaxMindWrapper();
         Broadcast<MaxMindWrapper> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(maxMindWrapper);
+        System.out.println(maxMindWrapper.getReader());
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
@@ -80,8 +81,10 @@ public class CollectEventBatch implements IJobBuilder {
                 try {
                     InetAddress inetAddress = InetAddress.getByName(ip);
                     CityResponse response = readerBroadcast.getValue().getReader().city(inetAddress);
+                    String city = response.getCity().getName();
+                    System.out.println("ip: " + ip + "\tcity: " + city);
 
-                    return response.getCity().getName();
+                    return city;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -117,8 +117,7 @@ public class CollectEventStream implements IJobBuilder {
         init();
 
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
-
-
+        
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
 //            OffsetRange[] offsetRanges = ((HasOffsetRanges) consumerRecordJavaRDD.rdd()).offsetRanges();
 
