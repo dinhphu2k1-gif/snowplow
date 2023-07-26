@@ -21,15 +21,20 @@ public class ElasticsearchClient {
             synchronized (ElasticsearchClient.class) {
                 if (esClient == null) {
                     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                    credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elastic", "MagicWord"));
+                    credentialsProvider.setCredentials(
+                            AuthScope.ANY,
+                            new UsernamePasswordCredentials(
+                                    "elastic",
+                                    "MagicWord")
+                    );
 
                     esClient = new RestHighLevelClient(
                             RestClient
                                     .builder(
                                             ConfigInfo.Elasticsearch.ES_HOST
                                     )
-                                    .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-                                            .setSSLHostnameVerifier((hostname, session) -> true))
+                                    .setHttpClientConfigCallback(httpAsyncClientBuilder -> httpAsyncClientBuilder
+                                            .setDefaultCredentialsProvider(credentialsProvider))
                     );
                 }
             }
