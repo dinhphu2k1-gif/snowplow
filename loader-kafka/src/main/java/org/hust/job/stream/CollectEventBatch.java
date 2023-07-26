@@ -3,10 +3,14 @@ package org.hust.job.stream;
 import com.maxmind.geoip2.model.CityResponse;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.MapPartitionsFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
+import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
@@ -57,6 +61,39 @@ public class CollectEventBatch implements IJobBuilder {
         return new Event(value);
     }
 
+    public Dataset<Row> ipMapping(Dataset<Row> df, Broadcast<MaxMindWrapper> readerBroadcast) {
+        StructType schema = new StructType()
+                .add("user_ipaddress", DataTypes.StringType, false)
+                .add("geo-city", DataTypes.StringType, false);
+        ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
+
+        Dataset<Row> ipMappingDf = df.select("user_ipaddress")
+                .distinct()
+                .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
+                    List<Row> list = new ArrayList<>();
+
+
+                    while (t.hasNext()) {
+                        Row row = t.next();
+
+                        String user_ipaddress = row.getAs("user_ipaddress");
+                        String ip = user_ipaddress.substring(0, user_ipaddress.length() - 1) + 1;
+
+                        InetAddress inetAddress = InetAddress.getByName(ip);
+                        CityResponse response = readerBroadcast.getValue().getReader().city(inetAddress);
+
+                        String city = response.getCity().getName();
+                        System.out.println("ip: " + ip + "\tcity: " + city);
+
+                        Row record = RowFactory.create(user_ipaddress, city);
+                        list.add(record);
+                    }
+
+                    return list.iterator();
+                }, encoder);
+        return ipMappingDf;
+    }
+
     @Override
     public void run(ArgsOptional args) {
         loadAgrs(args);
@@ -96,9 +133,12 @@ public class CollectEventBatch implements IJobBuilder {
             Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid", "contexts", "unstruct_event");
 
-            System.out.println("get city");
             data = data.withColumn("geo_city", call_udf("getCity", col("user_ipaddress")))
                     .persist();
+
+            System.out.println("ip mapping");
+            Dataset<Row> ipMapping = ipMapping(data, readerBroadcast);
+            ipMapping.show();
 
             System.out.println("num record: " + data.count());
             data.show();
