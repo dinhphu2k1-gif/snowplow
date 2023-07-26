@@ -23,6 +23,7 @@ import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
 import org.hust.utils.maxmind.MaxMindWrapper;
 import org.joda.time.DateTime;
+import scala.collection.JavaConverters;
 
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
@@ -63,7 +64,7 @@ public class CollectEventBatch implements IJobBuilder {
         return new Event(value);
     }
 
-    public Dataset<Row> ipMapping(Dataset<Row> df, Broadcast<MaxMindWrapper> readerBroadcast) {
+    public Dataset<Row> ipMapping(Dataset<Row> df) {
         StructType schema = new StructType()
                 .add("user_ipaddress", DataTypes.StringType, false)
                 .add("geo-city", DataTypes.StringType, false);
@@ -85,36 +86,6 @@ public class CollectEventBatch implements IJobBuilder {
         }
 
         Dataset<Row> ipMappingDf = spark.createDataFrame(mappingList, schema);
-
-//        Dataset<Row> ipMappingDf = df.select("user_ipaddress")
-//                .distinct()
-//                .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
-//                    List<Row> list = new ArrayList<>();
-//                    DatabaseReader reader = readerBroadcast.getValue().getReader();
-//
-//                    while (t.hasNext()) {
-//                        Row row = t.next();
-//
-//                        String user_ipaddress = row.getAs("user_ipaddress");
-//                        String ip = user_ipaddress.substring(0, user_ipaddress.length() - 1) + 1;
-//
-//                        try {
-//                            System.out.println("ip: " + ip);
-//                            InetAddress inetAddress = InetAddress.getByName(ip);
-//                            CityResponse response = reader.city(inetAddress);
-//
-//                            String city = response.getCity().getName();
-//                            System.out.println("ip: " + ip + "\tcity: " + city);
-//
-//                            Row record = RowFactory.create(user_ipaddress, city);
-//                            list.add(record);
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//
-//                    return list.iterator();
-//                }, encoder);
         return ipMappingDf;
     }
 
@@ -124,9 +95,9 @@ public class CollectEventBatch implements IJobBuilder {
         init();
 
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
-        MaxMindWrapper maxMindWrapper = new MaxMindWrapper();
-        Broadcast<MaxMindWrapper> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(maxMindWrapper);
-        System.out.println("reader: " + maxMindWrapper.getReader());
+//        MaxMindWrapper maxMindWrapper = new MaxMindWrapper();
+//        Broadcast<MaxMindWrapper> readerBroadcast = sparkUtils.getJavaSparkContext().broadcast(maxMindWrapper);
+//        System.out.println("reader: " + maxMindWrapper.getReader());
 
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
             JavaRDD<Event> rows = consumerRecordJavaRDD
@@ -136,33 +107,15 @@ public class CollectEventBatch implements IJobBuilder {
 
             Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
 
-            spark.udf().register("getCity", (UDF1<String, String>) ip -> {
-                ip = ip.substring(0, ip.length() - 1) + 1;
-
-                try {
-                    InetAddress inetAddress = InetAddress.getByName(ip);
-                    CityResponse response = readerBroadcast.getValue().getReader().city(inetAddress);
-                    String city = response.getCity().getName();
-                    System.out.println("ip: " + ip + "\tcity: " + city);
-
-                    return city;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                return null;
-            }, DataTypes.StringType);
-
-
             Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
                     "user_id", "user_ipaddress", "domain_userid", "contexts", "unstruct_event");
 
-            data = data.withColumn("geo_city", call_udf("getCity", col("user_ipaddress")))
-                    .persist();
-
             System.out.println("ip mapping");
-            Dataset<Row> ipMapping = ipMapping(data, readerBroadcast);
+            Dataset<Row> ipMapping = ipMapping(data);
             ipMapping.show();
+
+            data = data.join(ipMapping, JavaConverters.asScalaBuffer(Arrays.asList("user_ipaddress")).seq())
+                            .cache();
 
             System.out.println("num record: " + data.count());
             data.show();
