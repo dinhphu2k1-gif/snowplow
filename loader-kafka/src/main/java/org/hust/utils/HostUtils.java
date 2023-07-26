@@ -18,8 +18,8 @@ public class HostUtils {
         if (addressString == null) {
 
             return new HttpHost[]{
-                    new HttpHost("20.214.141.95", 9200, "http"),
-                    new HttpHost("52.231.108.82", 9200, "http")
+                    new HttpHost("20.214.141.95", 9200, "http")
+//                    new HttpHost("52.231.108.82", 9200, "http")
             };
         } else {
             List<String> addressList = Arrays.asList(addressString.split(","));
