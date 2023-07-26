@@ -67,7 +67,7 @@ public class CollectEventBatch implements IJobBuilder {
     public Dataset<Row> ipMapping(Dataset<Row> df) {
         StructType schema = new StructType()
                 .add("user_ipaddress", DataTypes.StringType, false)
-                .add("geo-city", DataTypes.StringType, false);
+                .add("geo_city", DataTypes.StringType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
         List<Row> ipList = df.select("user_ipaddress")
@@ -105,16 +105,14 @@ public class CollectEventBatch implements IJobBuilder {
                     .map(CollectEventBatch::transformRow)
                     .filter(Objects::nonNull);
 
-            Dataset<Event> ds = spark.createDataset(rows.rdd(), eventEncoder);
-
-            Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
-                    "user_id", "user_ipaddress", "domain_userid", "contexts", "unstruct_event");
+            Dataset<Row> data = spark.createDataFrame(rows.rdd(), Event.class)
+                    .drop("geo_city");
 
             System.out.println("ip mapping");
             Dataset<Row> ipMapping = ipMapping(data);
             ipMapping.show();
 
-            data = data.join(ipMapping, JavaConverters.asScalaBuffer(Arrays.asList("user_ipaddress")).seq())
+            data = data.join(ipMapping, JavaConverters.asScalaBuffer(Collections.singletonList("user_ipaddress")).seq())
                             .cache();
 
             System.out.println("num record: " + data.count());
