@@ -45,11 +45,11 @@ public class CollectEvent {
                 switch (event.getEvent()) {
                     case EventType.UNSTRUCT: {
                         IRecord iRecord = IRecord.createRecord(event);
-                        try {
-                            InsertDocument.insertDocument(iRecord);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+//                        try {
+//                            InsertDocument.insertDocument(iRecord);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
 
 //                        try {
 //                            InsertRecord.insertRecord(iRecord);
