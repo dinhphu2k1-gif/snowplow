@@ -1,5 +1,6 @@
 package org.hust.job.stream;
 
+import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -71,7 +72,7 @@ public class CollectEventBatch implements IJobBuilder {
                 .distinct()
                 .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
                     List<Row> list = new ArrayList<>();
-
+                    DatabaseReader reader = readerBroadcast.getValue().getReader();
 
                     while (t.hasNext()) {
                         Row row = t.next();
@@ -79,14 +80,19 @@ public class CollectEventBatch implements IJobBuilder {
                         String user_ipaddress = row.getAs("user_ipaddress");
                         String ip = user_ipaddress.substring(0, user_ipaddress.length() - 1) + 1;
 
-                        InetAddress inetAddress = InetAddress.getByName(ip);
-                        CityResponse response = readerBroadcast.getValue().getReader().city(inetAddress);
+                        try {
+                            System.out.println("ip: " + ip);
+                            InetAddress inetAddress = InetAddress.getByName(ip);
+                            CityResponse response = reader.city(inetAddress);
 
-                        String city = response.getCity().getName();
-                        System.out.println("ip: " + ip + "\tcity: " + city);
+                            String city = response.getCity().getName();
+                            System.out.println("ip: " + ip + "\tcity: " + city);
 
-                        Row record = RowFactory.create(user_ipaddress, city);
-                        list.add(record);
+                            Row record = RowFactory.create(user_ipaddress, city);
+                            list.add(record);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
 
                     return list.iterator();
