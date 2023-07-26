@@ -18,6 +18,7 @@ import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.hust.job.ArgsOptional;
 import org.hust.job.IJobBuilder;
 import org.hust.model.event.Event;
+import org.hust.utils.IpLookupUtils;
 import org.hust.utils.KafkaUtils;
 import org.hust.utils.SparkUtils;
 import org.hust.utils.maxmind.MaxMindWrapper;
@@ -68,35 +69,52 @@ public class CollectEventBatch implements IJobBuilder {
                 .add("geo-city", DataTypes.StringType, false);
         ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
 
-        Dataset<Row> ipMappingDf = df.select("user_ipaddress")
+        List<Row> ipList = df.select("user_ipaddress")
                 .distinct()
-                .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
-                    List<Row> list = new ArrayList<>();
-                    DatabaseReader reader = readerBroadcast.getValue().getReader();
+                .collectAsList();
+        List<Row> mappingList = new ArrayList<>();
+        for (Row row : ipList) {
+            String user_ipaddress = row.getAs("user_ipaddress");
+            String ip = user_ipaddress.substring(0, user_ipaddress.length() - 1) + 1;
 
-                    while (t.hasNext()) {
-                        Row row = t.next();
+            String city = IpLookupUtils.convertIpTo(IpLookupUtils.Type.CITY, ip);
+            System.out.println("ip: " + ip + "\tcity: " + city);
 
-                        String user_ipaddress = row.getAs("user_ipaddress");
-                        String ip = user_ipaddress.substring(0, user_ipaddress.length() - 1) + 1;
+            Row record = RowFactory.create(user_ipaddress, city);
+            mappingList.add(record);
+        }
 
-                        try {
-                            System.out.println("ip: " + ip);
-                            InetAddress inetAddress = InetAddress.getByName(ip);
-                            CityResponse response = reader.city(inetAddress);
+        Dataset<Row> ipMappingDf = spark.createDataFrame(mappingList, schema);
 
-                            String city = response.getCity().getName();
-                            System.out.println("ip: " + ip + "\tcity: " + city);
-
-                            Row record = RowFactory.create(user_ipaddress, city);
-                            list.add(record);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    return list.iterator();
-                }, encoder);
+//        Dataset<Row> ipMappingDf = df.select("user_ipaddress")
+//                .distinct()
+//                .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
+//                    List<Row> list = new ArrayList<>();
+//                    DatabaseReader reader = readerBroadcast.getValue().getReader();
+//
+//                    while (t.hasNext()) {
+//                        Row row = t.next();
+//
+//                        String user_ipaddress = row.getAs("user_ipaddress");
+//                        String ip = user_ipaddress.substring(0, user_ipaddress.length() - 1) + 1;
+//
+//                        try {
+//                            System.out.println("ip: " + ip);
+//                            InetAddress inetAddress = InetAddress.getByName(ip);
+//                            CityResponse response = reader.city(inetAddress);
+//
+//                            String city = response.getCity().getName();
+//                            System.out.println("ip: " + ip + "\tcity: " + city);
+//
+//                            Row record = RowFactory.create(user_ipaddress, city);
+//                            list.add(record);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//
+//                    return list.iterator();
+//                }, encoder);
         return ipMappingDf;
     }
 
