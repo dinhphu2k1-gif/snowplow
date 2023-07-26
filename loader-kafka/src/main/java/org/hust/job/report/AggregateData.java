@@ -350,7 +350,7 @@ public class AggregateData {
     }
 
     public static void main(String[] args) {
-        AggregateData aggregateData = new AggregateData(String[] args);
+        AggregateData aggregateData = new AggregateData(args);
         aggregateData.run();
     }
 }
