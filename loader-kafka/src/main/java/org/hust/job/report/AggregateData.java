@@ -41,8 +41,10 @@ public class AggregateData {
     }
 
     public void loadArgs(String[] args) {
-        if ("--date".equals(args[0])) {
-            date = args[1];
+        if (args.length != 0) {
+            if ("--date".equals(args[0])) {
+                date = args[1];
+            }
         } else {
             date = DateTimeUtils.getDate();
         }
@@ -336,7 +338,6 @@ public class AggregateData {
     public void run() {
         String path = "hdfs://hadoop23202:9000/user/phuld/data/event/" + date + "/*";
         System.out.println(path);
-
 
         Dataset<Row> data = spark.read().parquet(path);
         System.out.println("num record before: " + data.count());
