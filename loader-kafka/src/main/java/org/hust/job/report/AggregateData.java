@@ -31,10 +31,21 @@ import static org.apache.spark.sql.functions.*;
 public class AggregateData {
     private final SparkUtils sparkUtils;
     private final SparkSession spark;
+    private String date;
 
-    public AggregateData() {
+    public AggregateData(String[] args) {
+        loadArgs(args);
+
         sparkUtils = new SparkUtils("aggregate data", "yarn", 60);
         spark = sparkUtils.getSparkSession();
+    }
+
+    public void loadArgs(String[] args) {
+        if ("--date".equals(args[0])) {
+            date = args[1];
+        } else {
+            date = DateTimeUtils.getDate();
+        }
     }
 
     /**
@@ -323,7 +334,7 @@ public class AggregateData {
     }
 
     public void run() {
-        String path = "hdfs://hadoop23202:9000/user/phuld/data/event/" + DateTimeUtils.getDate() + "/*";
+        String path = "hdfs://hadoop23202:9000/user/phuld/data/event/" + date + "/*";
         System.out.println(path);
 
 
@@ -339,7 +350,7 @@ public class AggregateData {
     }
 
     public static void main(String[] args) {
-        AggregateData aggregateData = new AggregateData();
+        AggregateData aggregateData = new AggregateData(String[] args);
         aggregateData.run();
     }
 }
