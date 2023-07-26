@@ -94,8 +94,10 @@ public class CollectEventBatch implements IJobBuilder {
 
 
             Dataset<Row> data = ds.select("app_id", "platform", "dvce_created_tstamp", "event", "event_id",
-                    "user_id", "user_ipaddress", "domain_userid", "contexts", "unstruct_event")
-                    .withColumn("geo_city", call_udf("getCity", col("user_ipaddress")))
+                    "user_id", "user_ipaddress", "domain_userid", "contexts", "unstruct_event");
+
+            System.out.println("get city");
+            data = data.withColumn("geo_city", call_udf("getCity", col("user_ipaddress")))
                     .persist();
 
             System.out.println("num record: " + data.count());
