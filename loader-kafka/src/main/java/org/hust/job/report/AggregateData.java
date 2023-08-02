@@ -114,115 +114,115 @@ public class AggregateData {
         data.show();
 
         // product analysis
-        Dataset<Row> productAnalysisView = data
-                .filter("action = 'view'")
-                .groupBy("time", "product_id")
-                .agg(count("*").as("view"));
-
-        Dataset<Row> productAnalysisPurchase = data
-                .filter("action = 'purchase'")
-                .groupBy("time", "product_id")
-                .agg(count("*").as("purchase"));
-
-        Dataset<Row> productAnalysisRevenue = data
-                .withColumn("revenue", col("quantity").multiply(col("price")))
-                .filter("action = 'purchase'")
-                .groupBy("time", "product_id")
-                .agg(sum("revenue").as("total_revenue"));
-
-        Dataset<Row> productAnalysis = productAnalysisView
-                .join(productAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "product_id")).seq(), "outer")
-                .join(productAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "product_id")).seq(), "outer");
-
-        System.out.println("Product Analysis: ");
-        productAnalysis.show();
-
-        List<Row> productAnalysisList = productAnalysis.collectAsList();
-        MysqlService mysqlService = new MysqlService();
-        for (Row row : productAnalysisList) {
-            long time = row.getLong(0);
-            int productId = row.getInt(1);
-            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
-            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
-            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
-
-            mysqlService.insertProductAnalysis(time, productId, numView, numPurchase, revenue);
-        }
-
-        // cateogry analysis
-        Dataset<Row> categoryAnalysisView = data
-                .filter("action = 'view'")
-                .groupBy("time", "category_id")
-                .agg(count("*").as("view"));
-
-        Dataset<Row> categoryAnalysisPurchase = data
-                .filter("action = 'purchase'")
-                .groupBy("time", "category_id")
-                .agg(count("*").as("purchase"));
-
-        Dataset<Row> categoryAnalysisRevenue = data
-                .withColumn("revenue", col("quantity").multiply(col("price")))
-                .filter("action = 'purchase'")
-                .groupBy("time", "category_id")
-                .agg(sum("revenue").as("total_revenue"));
-
-        Dataset<Row> categoryAnalysis = categoryAnalysisView
-                .join(categoryAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "category_id")).seq(), "outer")
-                .join(categoryAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "category_id")).seq(), "outer");
-
-        System.out.println("Category Analysis: ");
-        categoryAnalysis.show();
-
-        List<Row> categoryAnalysisList = categoryAnalysis.collectAsList();
-        for (Row row : categoryAnalysisList) {
-            long time = row.getLong(0);
-            int categoryId = row.getInt(1);
-            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
-            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
-            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
-
-            mysqlService.insertCategoryAnalysis(time, categoryId, numView, numPurchase, revenue);
-        }
-
-        // range_analysis
-        Dataset<Row> dataRange = data
-                .withColumn("range", when(col("price").lt(100000), "0 - 100000")
-                        .when(col("price").geq(100000).and(col("price").lt(300000)), "100000 - 300000")
-                        .when(col("price").geq(300000).and(col("price").lt(500000)), "300000 - 500000")
-                        .otherwise(">= 500000"));
-        Dataset<Row> rangeAnalysisView = dataRange
-                .filter("action = 'view'")
-                .groupBy("time", "range")
-                .agg(count("*").as("view"));
-
-        Dataset<Row> rangeAnalysisPurchase = dataRange
-                .filter("action = 'purchase'")
-                .groupBy("time", "range")
-                .agg(count("*").as("purchase"));
-
-        Dataset<Row> rangeAnalysisRevenue = dataRange
-                .withColumn("revenue", col("quantity").multiply(col("price")))
-                .filter("action = 'purchase'")
-                .groupBy("time", "range")
-                .agg(sum("revenue").as("total_revenue"));
-
-        Dataset<Row> rangeAnalysis = rangeAnalysisView
-                .join(rangeAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "range")).seq(), "outer")
-                .join(rangeAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "range")).seq(), "outer");
-
-        System.out.println("Range Analysis: ");
-        rangeAnalysis.show();
-
-        List<Row> rangeAnalysisList = rangeAnalysis.collectAsList();
-        for (Row row : rangeAnalysisList) {
-            long time = row.getLong(0);
-            String range = row.getString(1);
-            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
-            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
-            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
-
-            mysqlService.insertRangeAnalysis(time, range, numView, numPurchase, revenue);
-        }
+//        Dataset<Row> productAnalysisView = data
+//                .filter("action = 'view'")
+//                .groupBy("time", "product_id")
+//                .agg(count("*").as("view"));
+//
+//        Dataset<Row> productAnalysisPurchase = data
+//                .filter("action = 'purchase'")
+//                .groupBy("time", "product_id")
+//                .agg(count("*").as("purchase"));
+//
+//        Dataset<Row> productAnalysisRevenue = data
+//                .withColumn("revenue", col("quantity").multiply(col("price")))
+//                .filter("action = 'purchase'")
+//                .groupBy("time", "product_id")
+//                .agg(sum("revenue").as("total_revenue"));
+//
+//        Dataset<Row> productAnalysis = productAnalysisView
+//                .join(productAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "product_id")).seq(), "outer")
+//                .join(productAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "product_id")).seq(), "outer");
+//
+//        System.out.println("Product Analysis: ");
+//        productAnalysis.show();
+//
+//        List<Row> productAnalysisList = productAnalysis.collectAsList();
+//        MysqlService mysqlService = new MysqlService();
+//        for (Row row : productAnalysisList) {
+//            long time = row.getLong(0);
+//            int productId = row.getInt(1);
+//            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
+//            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
+//            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
+//
+//            mysqlService.insertProductAnalysis(time, productId, numView, numPurchase, revenue);
+//        }
+//
+//        // cateogry analysis
+//        Dataset<Row> categoryAnalysisView = data
+//                .filter("action = 'view'")
+//                .groupBy("time", "category_id")
+//                .agg(count("*").as("view"));
+//
+//        Dataset<Row> categoryAnalysisPurchase = data
+//                .filter("action = 'purchase'")
+//                .groupBy("time", "category_id")
+//                .agg(count("*").as("purchase"));
+//
+//        Dataset<Row> categoryAnalysisRevenue = data
+//                .withColumn("revenue", col("quantity").multiply(col("price")))
+//                .filter("action = 'purchase'")
+//                .groupBy("time", "category_id")
+//                .agg(sum("revenue").as("total_revenue"));
+//
+//        Dataset<Row> categoryAnalysis = categoryAnalysisView
+//                .join(categoryAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "category_id")).seq(), "outer")
+//                .join(categoryAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "category_id")).seq(), "outer");
+//
+//        System.out.println("Category Analysis: ");
+//        categoryAnalysis.show();
+//
+//        List<Row> categoryAnalysisList = categoryAnalysis.collectAsList();
+//        for (Row row : categoryAnalysisList) {
+//            long time = row.getLong(0);
+//            int categoryId = row.getInt(1);
+//            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
+//            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
+//            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
+//
+//            mysqlService.insertCategoryAnalysis(time, categoryId, numView, numPurchase, revenue);
+//        }
+//
+//        // range_analysis
+//        Dataset<Row> dataRange = data
+//                .withColumn("range", when(col("price").lt(100000), "0 - 100000")
+//                        .when(col("price").geq(100000).and(col("price").lt(300000)), "100000 - 300000")
+//                        .when(col("price").geq(300000).and(col("price").lt(500000)), "300000 - 500000")
+//                        .otherwise(">= 500000"));
+//        Dataset<Row> rangeAnalysisView = dataRange
+//                .filter("action = 'view'")
+//                .groupBy("time", "range")
+//                .agg(count("*").as("view"));
+//
+//        Dataset<Row> rangeAnalysisPurchase = dataRange
+//                .filter("action = 'purchase'")
+//                .groupBy("time", "range")
+//                .agg(count("*").as("purchase"));
+//
+//        Dataset<Row> rangeAnalysisRevenue = dataRange
+//                .withColumn("revenue", col("quantity").multiply(col("price")))
+//                .filter("action = 'purchase'")
+//                .groupBy("time", "range")
+//                .agg(sum("revenue").as("total_revenue"));
+//
+//        Dataset<Row> rangeAnalysis = rangeAnalysisView
+//                .join(rangeAnalysisPurchase, JavaConverters.asScalaBuffer(Arrays.asList("time", "range")).seq(), "outer")
+//                .join(rangeAnalysisRevenue, JavaConverters.asScalaBuffer(Arrays.asList("time", "range")).seq(), "outer");
+//
+//        System.out.println("Range Analysis: ");
+//        rangeAnalysis.show();
+//
+//        List<Row> rangeAnalysisList = rangeAnalysis.collectAsList();
+//        for (Row row : rangeAnalysisList) {
+//            long time = row.getLong(0);
+//            String range = row.getString(1);
+//            long numView = row.getAs(2) == null ? 0 : row.getLong(2);
+//            long numPurchase = row.getAs(3) == null ? 0 : row.getLong(3);
+//            long revenue = row.getAs(4) == null ? 0 : row.getLong(4);
+//
+//            mysqlService.insertRangeAnalysis(time, range, numView, numPurchase, revenue);
+//        }
 
     }
 
@@ -336,7 +336,7 @@ public class AggregateData {
     }
 
     public void run() {
-        String path = "hdfs://hadoop23202:9000/user/phuld/data/event/" + date + "/*";
+        String path = "hdfs://hadoop23202:9000/user/phuld/data/event/" + "*/*";
         System.out.println(path);
 
         Dataset<Row> data = spark.read().parquet(path);
@@ -346,8 +346,8 @@ public class AggregateData {
 
 
         productAnalysis(data);
-        viewAnalysis(data);
-        locationAnalysis(data);
+//        viewAnalysis(data);
+//        locationAnalysis(data);
     }
 
     public static void main(String[] args) {

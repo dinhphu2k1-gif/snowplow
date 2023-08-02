@@ -29,20 +29,20 @@ services:
     volumes:
       - ./data/backend/images:/book-shop-web/backend/public/static/images
 
-  bookshop-frontend:
-    image: dinhphu/bookshop-frontend:1.0.1
-    container_name: bookshop-frontend
-    # restart: always
-    environment:
-      - REACT_APP_BACKEND_HOST=172.19.0.3
-      - REACT_APP_COLLECTOR_HOST=172.19.0.13
-    depends_on:
-      - bookshop-backend
-    ports:
-      - 3000:3000
-    networks:
-      snowplow: 
-        ipv4_address: 172.19.0.4
+  # bookshop-frontend:
+  #   image: dinhphu/bookshop-frontend:1.0.1
+  #   container_name: bookshop-frontend
+  #   # restart: always
+  #   environment:
+  #     - REACT_APP_BACKEND_HOST=172.19.0.3
+  #     - REACT_APP_COLLECTOR_HOST=172.19.0.13
+  #   depends_on:
+  #     - bookshop-backend
+  #   ports:
+  #     - 3000:3000
+  #   networks:
+  #     snowplow: 
+  #       ipv4_address: 172.19.0.4
 
   bookshop-admin:
     image: dinhphu/bookshop-admin:1.0.1
@@ -120,39 +120,39 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
 
-  elasticsearch1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
-    container_name: elasticsearch1
-    hostname: elasticsearch1
-    # restart: always
-    ports: 
-      - "9200:9200"
-    environment:
-      - "node.name=elasticsearch1"
-      - "bootstrap.memory_lock=true"
-      - "cluster.name=es-cluster"
-      - "discovery.seed_hosts=elasticsearch1"
-      - "cluster.initial_master_nodes=elasticsearch1"
-      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
-      - "xpack.security.enabled=false"
-      - "xpack.security.http.ssl.enabled=false"
-      - "xpack.security.transport.ssl.enabled=false"
-    networks:
-      snowplow: 
-        ipv4_address: 172.19.0.10
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200"]
-      interval: 30s
-      timeout: 10s
-      retries: 30
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    deploy:
-      resources:
-        limits:
-          memory: 512m
+  # elasticsearch1:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
+  #   container_name: elasticsearch1
+  #   hostname: elasticsearch1
+  #   # restart: always
+  #   ports: 
+  #     - "9200:9200"
+  #   environment:
+  #     - "node.name=elasticsearch1"
+  #     - "bootstrap.memory_lock=true"
+  #     - "cluster.name=es-cluster"
+  #     - "discovery.seed_hosts=elasticsearch1"
+  #     - "cluster.initial_master_nodes=elasticsearch1"
+  #     - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+  #     - "xpack.security.enabled=false"
+  #     - "xpack.security.http.ssl.enabled=false"
+  #     - "xpack.security.transport.ssl.enabled=false"
+  #   networks:
+  #     snowplow: 
+  #       ipv4_address: 172.19.0.10
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9200"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 30
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 512m
 
   # elasticsearch2:
   #   image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
@@ -189,19 +189,19 @@ services:
   #       limits:
   #         memory: 512m
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.6.1
-    container_name: kibana
-    # restart: always
-    environment:
-      - 'ELASTICSEARCH_HOSTS=["http://elasticsearch1:9200"]'
-      - "SERVER_NAME=localhost"
-      - "SERVER_PUBLICBASEURL=http://localhost:5601"
-    ports:
-      - "5601:5601"
-    networks:
-      snowplow: 
-        ipv4_address: 172.19.0.11
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:8.6.1
+  #   container_name: kibana
+  #   # restart: always
+  #   environment:
+  #     - 'ELASTICSEARCH_HOSTS=["http://elasticsearch1:9200"]'
+  #     - "SERVER_NAME=localhost"
+  #     - "SERVER_PUBLICBASEURL=http://localhost:5601"
+  #   ports:
+  #     - "5601:5601"
+  #   networks:
+  #     snowplow: 
+  #       ipv4_address: 172.19.0.11
 
 # snowplow
   iglu-server:
@@ -254,24 +254,15 @@ services:
   #     snowplow: 
   #       ipv4_address: 172.17.0.15
 
-  metabase:
-    image: metabase/metabase
-    container_name: metabase
+  # metabase:
+  #   image: metabase/metabase
+  #   container_name: metabase
     # restart: always
-    # environment:
-      # - MB_DB_TYPE=mysql
-      # - MB_DB_DBNAME=customer-data-platform
-      # - MB_DB_PORT=3306
-      # - MB_DB_USER=book_shop
-      # - MB_DB_PASS=package1107N
-      # - MB_DB_HOST=mysqldb
-    ports:
-      - 4000:3000
-    # depends_on:
-    #   - mysqldb
-    networks:
-      snowplow: 
-        ipv4_address: 172.19.0.16
+    # ports:
+    #   - 4000:3000
+    # networks:
+    #   snowplow: 
+    #     ipv4_address: 172.19.0.16
 
     
 networks:
