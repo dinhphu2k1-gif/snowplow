@@ -37,10 +37,13 @@ public class CollectEventBatch implements IJobBuilder {
     }
 
     public void init() {
-        sparkUtils = new SparkUtils("collect event to log", "yarn", args.getDuration());
+        String taskName = "collect event to log";
+        String groupId = taskName + args.getGroupId();
+
+        sparkUtils = new SparkUtils(taskName, "yarn", args.getDuration());
         spark = sparkUtils.getSparkSession();
 
-        KafkaUtils kafkaUtils = new KafkaUtils(args.getGroupId(), topicList);
+        KafkaUtils kafkaUtils = new KafkaUtils(groupId, topicList);
 
         stream = org.apache.spark.streaming.kafka010.KafkaUtils
                 .createDirectStream(sparkUtils.getJavaStreamingContext(),
