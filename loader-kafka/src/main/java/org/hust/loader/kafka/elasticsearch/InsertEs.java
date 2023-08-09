@@ -15,24 +15,28 @@ import java.io.IOException;
 /**
  * Insert các event vào graph
  */
-public class InsertDocument{
-    private final static RestHighLevelClient esClient = ElasticsearchClient.getEsClient();
+public class InsertEs {
+    private RestHighLevelClient esClient;
 
-    public static void insertDocument(IRecord record){
+    public InsertEs() {
+        esClient = ElasticsearchClient.getEsClient();
+    }
+
+    public void insertDocument(IRecord record){
         if (record == null) return;
 
         IndexRequest request = null;
 
         if (record instanceof TrackingActionProduct) {
             TrackingActionProduct document = (TrackingActionProduct) record;
-            System.out.println(document.toString());
+            System.out.println(document);
 
             request = new IndexRequest(TableName.TRACKING_ACTION_PRODUCT);
             request.source(document.toString(), XContentType.JSON);
             System.out.println("insert action product!!");
         } else if (record instanceof TrackingActionSearch) {
             TrackingActionSearch document = (TrackingActionSearch) record;
-            System.out.println(document.toString());
+            System.out.println(document);
 
             request = new IndexRequest(TableName.TRACKING_ACTION_SEARCH);
             request.source(document.toString(), XContentType.JSON);

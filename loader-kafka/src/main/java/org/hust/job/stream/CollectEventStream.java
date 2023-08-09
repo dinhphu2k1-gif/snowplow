@@ -8,7 +8,7 @@ import org.apache.spark.streaming.kafka010.*;
 import org.hust.job.ArgsOptional;
 import org.hust.job.IJobBuilder;
 import org.hust.loader.IRecord;
-import org.hust.loader.kafka.elasticsearch.InsertDocument;
+import org.hust.loader.kafka.elasticsearch.InsertEs;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
 import org.hust.service.mysql.MysqlService;
@@ -56,14 +56,16 @@ public class CollectEventStream implements IJobBuilder {
 
     public void insertIntoEs(Dataset<Event> ds) {
         ds.foreachPartition(t -> {
+            InsertEs insertEs = new InsertEs();
             while (t.hasNext()) {
                 Event event = t.next();
+                System.out.println(event);
 
                 switch (event.getEvent()) {
                     case EventType.UNSTRUCT: {
                         IRecord iRecord = IRecord.createRecord(event);
                         try {
-                            InsertDocument.insertDocument(iRecord);
+                            insertEs.insertDocument(iRecord);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

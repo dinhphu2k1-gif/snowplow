@@ -5,8 +5,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.hust.config.ConfigInfo;
 import org.hust.loader.IRecord;
-import org.hust.loader.kafka.elasticsearch.InsertDocument;
-import org.hust.loader.kafka.mysql.InsertRecord;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
 
