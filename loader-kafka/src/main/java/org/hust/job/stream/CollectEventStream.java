@@ -82,8 +82,9 @@ public class CollectEventStream implements IJobBuilder {
     }
 
     public void insertMapping(Dataset<Event> ds) {
-        Dataset<Row> mapping = ds
-                .toDF()
+        Dataset<Row> data = spark.createDataFrame(ds.rdd(), Event.class);
+
+        Dataset<Row> mapping = data
                 .select("user_id", "domain_userid")
                 .filter("user_id != '' and domain_userid != ''")
                 .dropDuplicates();
@@ -123,9 +124,9 @@ public class CollectEventStream implements IJobBuilder {
                                 System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
 
                                 byte[] key = HashUtils.hashPrefixKey(domain_userid);
-                                byte[] data = Bytes.toBytes(user_id);
+                                byte[] value = Bytes.toBytes(user_id);
 
-                                hbaseService.pushMapping(key, data);
+                                hbaseService.pushMapping(key, value);
                             }
 
                             // push user_id -> list domain user id
