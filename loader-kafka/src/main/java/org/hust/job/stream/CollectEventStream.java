@@ -4,6 +4,7 @@ import com.vcc.bigdata.util.Bytes;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.*;
+import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.kafka010.*;
 import org.hust.job.ArgsOptional;
@@ -81,78 +82,82 @@ public class CollectEventStream implements IJobBuilder {
         });
     }
 
-//    public void insertMapping(Dataset<Event> ds) {
-//        Dataset<Row> data = spark.createDataFrame(ds.rdd(), Event.class);
-//
-//        Dataset<Row> mapping = data
-//                .select("user_id", "domain_userid")
-//                .filter("user_id != '' and domain_userid != ''")
-//                .dropDuplicates();
-//
-//        mapping.toJavaRDD()
-//                .mapPartitionsToPair(t -> {
-//                    List<Tuple2<Integer, List<String>>> out = new ArrayList<>();
-//                    while (t.hasNext()) {
-//                        Row row = t.next();
-//                        int user_id = Integer.parseInt(row.getString(0));
-//                        String domain_userid = row.getString(1);
-//
-//                        out.add(new Tuple2<>(user_id, Collections.singletonList(domain_userid)));
-//                    }
-//
-//                    return out.iterator();
-//                })
-//                .filter(Objects::nonNull)
-//                .reduceByKey((a, b) -> {
-//                    List<String> out = new ArrayList<>();
-//                    out.addAll(a);
-//                    out.addAll(b);
-//
-//                    return out;
-//                })
-//                .foreachPartition(t -> {
-//                    HbaseService hbaseService = new HbaseService();
-//
-//                    while (t.hasNext()) {
-//                        Tuple2<Integer, List<String>> tuple2 = t.next();
-//
-//                        try {
-//                            int user_id = tuple2._1;
-//                            List<String> domainUserIdList = tuple2._2;
-//
-//                            for (String domain_userid : domainUserIdList) {
-//                                System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
-//
-//                                byte[] key = HashUtils.hashPrefixKey(domain_userid);
-//                                byte[] value = Bytes.toBytes(user_id);
-//
-//                                hbaseService.pushMapping(key, value);
-//                            }
-//
-//                            // push user_id -> list domain user id
-//                            byte[] key = HashUtils.hashPrefixKey(String.valueOf(user_id));
-//                            byte[] valueOld = hbaseService.getMapping(key);
-//                            DomainUserIdList domainUserIdListNew;
-//                            if (valueOld == null) {
-//                                domainUserIdListNew = new DomainUserIdList();
-//                            } else {
-//                                domainUserIdListNew = (DomainUserIdList) SerializationUtils.deserialize(valueOld);
-//                            }
-//
-//                            for (String domain_userid : domainUserIdList) {
-//                                domainUserIdListNew.map.put(domain_userid, System.currentTimeMillis());
-//                            }
-//
-//                            byte[] valueNew = SerializationUtils.serialize(domainUserIdListNew);
-//                            hbaseService.pushMapping(key, valueNew);
-//                            System.out.println("insert mapping");
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                    }
-//                });
-//    }
+    public void insertMapping(Dataset<Event> ds) {
+        Dataset<Row> data = spark.createDataFrame(ds.rdd(), Event.class);
+
+        Dataset<Row> mapping = data
+                .select("user_id", "domain_userid")
+                .filter("user_id != '' and domain_userid != ''")
+                .dropDuplicates()
+                .persist(StorageLevel.MEMORY_AND_DISK());
+        System.out.println("num record mapping: " + mapping.count());
+
+        mapping.toJavaRDD()
+                .mapPartitionsToPair(t -> {
+                    List<Tuple2<Integer, List<String>>> out = new ArrayList<>();
+                    while (t.hasNext()) {
+                        Row row = t.next();
+                        int user_id = Integer.parseInt(row.getString(0));
+                        String domain_userid = row.getString(1);
+
+                        out.add(new Tuple2<>(user_id, Collections.singletonList(domain_userid)));
+                    }
+
+                    return out.iterator();
+                })
+                .filter(Objects::nonNull)
+                .reduceByKey((a, b) -> {
+                    List<String> out = new ArrayList<>();
+                    out.addAll(a);
+                    out.addAll(b);
+
+                    return out;
+                })
+                .foreachPartition(t -> {
+                    HbaseService hbaseService = new HbaseService();
+
+                    while (t.hasNext()) {
+                        Tuple2<Integer, List<String>> tuple2 = t.next();
+
+                        try {
+                            int user_id = tuple2._1;
+                            List<String> domainUserIdList = tuple2._2;
+
+                            for (String domain_userid : domainUserIdList) {
+                                System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
+
+                                byte[] key = HashUtils.hashPrefixKey(domain_userid);
+                                byte[] value = Bytes.toBytes(user_id);
+
+                                hbaseService.pushMapping(key, value);
+                            }
+
+                            // push user_id -> list domain user id
+                            byte[] key = HashUtils.hashPrefixKey(String.valueOf(user_id));
+                            byte[] valueOld = hbaseService.getMapping(key);
+                            DomainUserIdList domainUserIdListNew;
+                            if (valueOld == null) {
+                                domainUserIdListNew = new DomainUserIdList();
+                            } else {
+                                domainUserIdListNew = (DomainUserIdList) SerializationUtils.deserialize(valueOld);
+                            }
+
+                            for (String domain_userid : domainUserIdList) {
+                                domainUserIdListNew.map.put(domain_userid, System.currentTimeMillis());
+                            }
+
+                            byte[] valueNew = SerializationUtils.serialize(domainUserIdListNew);
+                            hbaseService.pushMapping(key, valueNew);
+                            System.out.println("insert mapping");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+
+        mapping.unpersist();
+    }
 
     @Override
     public void run(ArgsOptional args) {
