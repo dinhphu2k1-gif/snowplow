@@ -82,7 +82,9 @@ public class CollectEventStream implements IJobBuilder {
     }
 
     public void insertMapping(Dataset<Event> ds) {
-        Dataset<Row> mapping = ds.select("user_id", "domain_userid")
+        Dataset<Row> mapping = ds
+                .toDF()
+                .select("user_id", "domain_userid")
                 .filter("user_id != '' and domain_userid != ''")
                 .dropDuplicates();
 
