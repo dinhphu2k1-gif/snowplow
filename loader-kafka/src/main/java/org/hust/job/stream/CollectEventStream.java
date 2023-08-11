@@ -3,7 +3,12 @@ package org.hust.job.stream;
 import com.vcc.bigdata.util.Bytes;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.MapPartitionsFunction;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
+import org.apache.spark.sql.catalyst.encoders.RowEncoder;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.kafka010.*;
@@ -83,12 +88,30 @@ public class CollectEventStream implements IJobBuilder {
     }
 
     public void insertMapping(Dataset<Event> ds) {
-        Dataset<Row> data = spark.createDataFrame(ds.rdd(), Event.class);
+        StructType schema = new StructType()
+                .add("user_id", DataTypes.IntegerType, false)
+                .add("domain_userid", DataTypes.StringType, false);
 
-        Dataset<Row> mapping = data
-                .select("user_id", "domain_userid")
-                .filter("user_id != '' and domain_userid != ''")
-                .dropDuplicates()
+        ExpressionEncoder<Row> encoder = RowEncoder.apply(schema);
+
+        Dataset<Row> mapping = ds
+                .mapPartitions((MapPartitionsFunction<Event, Row>) t -> {
+                    List<Row> rowList = new ArrayList<>();
+
+                    while (t.hasNext()) {
+                        Event event = t.next();
+                        try {
+                            int user_id = Integer.parseInt(event.getUser_id());
+                            String domain_userid = event.getDomain_userid();
+
+                            rowList.add(RowFactory.create(user_id, domain_userid));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    return rowList.iterator();
+                },  encoder)
                 .persist(StorageLevel.MEMORY_AND_DISK());
         System.out.println("num record mapping: " + mapping.count());
 
@@ -190,7 +213,7 @@ public class CollectEventStream implements IJobBuilder {
             System.out.println("time insert es: " + (System.currentTimeMillis() - t2) + " ms");
 
             long t3 = System.currentTimeMillis();
-//            insertMapping(ds);
+            insertMapping(ds);
             System.out.println("time insert hbase: " + (System.currentTimeMillis() - t3) + " ms");
 
             ds.unpersist();
