@@ -1,6 +1,7 @@
 package org.hust.model.entity.impl;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.hust.model.entity.IContext;
 import org.json.JSONObject;
 
@@ -8,6 +9,7 @@ import org.json.JSONObject;
  * User Context
  */
 @Getter
+@Setter
 public class UserContext implements IContext {
     private int user_id = -1;
     private String user_name = "-1";

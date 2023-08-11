@@ -1,5 +1,6 @@
 package org.hust.job.stream;
 
+import com.vcc.bigdata.util.Bytes;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.*;
@@ -11,10 +12,15 @@ import org.hust.loader.IRecord;
 import org.hust.loader.kafka.elasticsearch.InsertEs;
 import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
+import org.hust.service.hbase.DomainUserIdList;
+import org.hust.service.hbase.HbaseService;
 import org.hust.service.mysql.MysqlService;
+import org.hust.utils.HashUtils;
 import org.hust.utils.KafkaUtils;
+import org.hust.utils.SerializationUtils;
 import org.hust.utils.SparkUtils;
 import org.joda.time.DateTime;
+import scala.Tuple2;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -59,7 +65,6 @@ public class CollectEventStream implements IJobBuilder {
             InsertEs insertEs = new InsertEs();
             while (t.hasNext()) {
                 Event event = t.next();
-                System.out.println(event);
 
                 switch (event.getEvent()) {
                     case EventType.UNSTRUCT: {
@@ -81,28 +86,69 @@ public class CollectEventStream implements IJobBuilder {
                 .filter("user_id != '' and domain_userid != ''")
                 .dropDuplicates();
 
-        mapping.foreachPartition(t -> {
-            MysqlService mysqlService = new MysqlService();
+        mapping.toJavaRDD()
+                .mapPartitionsToPair(t -> {
+                    List<Tuple2<Integer, List<String>>> out = new ArrayList<>();
+                    while (t.hasNext()) {
+                        Row row = t.next();
+                        int user_id = Integer.parseInt(row.getString(0));
+                        String domain_userid = row.getString(1);
 
-            while (t.hasNext()) {
-                Row row = t.next();
-
-                try {
-                    int user_id = Integer.parseInt(row.getString(0));
-                    String domain_userid = row.getString(1);
-                    System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
-
-                    boolean exist = mysqlService.checkExistMapping(user_id, domain_userid);
-                    if (!exist) {
-                        mysqlService.insertMapping(user_id, domain_userid);
-                        System.out.println("insert mapping");
+                        out.add(new Tuple2<>(user_id, Collections.singletonList(domain_userid)));
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
 
-            }
-        });
+                    return out.iterator();
+                })
+                .filter(Objects::nonNull)
+                .reduceByKey((a, b) -> {
+                    List<String> out = new ArrayList<>();
+                    out.addAll(a);
+                    out.addAll(b);
+
+                    return out;
+                })
+                .foreachPartition(t -> {
+                    HbaseService hbaseService = new HbaseService();
+
+                    while (t.hasNext()) {
+                        Tuple2<Integer, List<String>> tuple2 = t.next();
+
+                        try {
+                            int user_id = tuple2._1;
+                            List<String> domainUserIdList = tuple2._2;
+
+                            for (String domain_userid : domainUserIdList) {
+                                System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
+
+                                byte[] key = HashUtils.hashPrefixKey(domain_userid);
+                                byte[] data = Bytes.toBytes(user_id);
+
+                                hbaseService.pushMapping(key, data);
+                            }
+
+                            // push user_id -> list domain user id
+                            byte[] key = HashUtils.hashPrefixKey(String.valueOf(user_id));
+                            byte[] valueOld = hbaseService.getMapping(key);
+                            DomainUserIdList domainUserIdListNew;
+                            if (valueOld == null) {
+                                domainUserIdListNew = new DomainUserIdList();
+                            } else {
+                                domainUserIdListNew = (DomainUserIdList) SerializationUtils.deserialize(valueOld);
+                            }
+
+                            for (String domain_userid : domainUserIdList) {
+                                domainUserIdListNew.map.put(domain_userid, System.currentTimeMillis());
+                            }
+
+                            byte[] valueNew = SerializationUtils.serialize(domainUserIdListNew);
+                            hbaseService.pushMapping(key, valueNew);
+                            System.out.println("insert mapping");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
     }
 
     @Override
@@ -111,7 +157,7 @@ public class CollectEventStream implements IJobBuilder {
         init();
 
         Encoder<Event> eventEncoder = Encoders.bean(Event.class);
-        
+
         stream.foreachRDD((consumerRecordJavaRDD, time) -> {
 //            OffsetRange[] offsetRanges = ((HasOffsetRanges) consumerRecordJavaRDD.rdd()).offsetRanges();
 
@@ -137,7 +183,7 @@ public class CollectEventStream implements IJobBuilder {
 
             long t3 = System.currentTimeMillis();
             insertMapping(ds);
-            System.out.println("time insert mysql: " + (System.currentTimeMillis() - t3) + " ms");
+            System.out.println("time insert hbase: " + (System.currentTimeMillis() - t3) + " ms");
 
             ds.unpersist();
 

@@ -27,4 +27,12 @@ public class ConfigInfo {
     }
 
     public final static String GEOLITE2_CITY = "properties/GeoLite2-City.mmdb";
+
+    public static class Hbase {
+        public static final String HBASE_ZOOKEEPER_QUORUM = "10.3.105.174,10.3.105.211,10.3.104.174"; // con hbase dev
+        public final static String HBASE_ZOOKEEPER_PORT = "2181";
+        public final static String HBASE_TABLE_CDP_MAPPING = "cdp_mapping";
+        public final static String HBASE_FAMILY_MAPPING = "mapping";
+        public final static String HBASE_QUALIFIER_MAPPING = "mapping";
+    }
 }
