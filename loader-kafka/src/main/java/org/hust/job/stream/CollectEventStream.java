@@ -31,6 +31,9 @@ import scala.Tuple2;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static org.apache.spark.sql.functions.collect_set;
+import static org.apache.spark.sql.functions.map;
+
 public class CollectEventStream implements IJobBuilder {
     private SparkUtils sparkUtils;
     private SparkSession spark;
@@ -112,39 +115,44 @@ public class CollectEventStream implements IJobBuilder {
 
                     return rowList.iterator();
                 },  encoder)
+                .dropDuplicates()
                 .persist(StorageLevel.MEMORY_AND_DISK());
         System.out.println("num record mapping: " + mapping.count());
+        mapping.show(false);
 
-        mapping.toJavaRDD()
-                .mapPartitionsToPair(t -> {
-                    List<Tuple2<Integer, List<String>>> out = new ArrayList<>();
-                    while (t.hasNext()) {
-                        Row row = t.next();
-                        int user_id = Integer.parseInt(row.getString(0));
-                        String domain_userid = row.getString(1);
-
-                        out.add(new Tuple2<>(user_id, Collections.singletonList(domain_userid)));
-                    }
-
-                    return out.iterator();
-                })
-                .filter(Objects::nonNull)
-                .reduceByKey((a, b) -> {
-                    List<String> out = new ArrayList<>();
-                    out.addAll(a);
-                    out.addAll(b);
-
-                    return out;
-                })
+//        mapping.toJavaRDD()
+//                .mapPartitionsToPair(t -> {
+//                    List<Tuple2<Integer, List<String>>> out = new ArrayList<>();
+//                    while (t.hasNext()) {
+//                        Row row = t.next();
+//                        int user_id = Integer.parseInt(row.getString(0));
+//                        String domain_userid = row.getString(1);
+//
+//                        out.add(new Tuple2<>(user_id, Collections.singletonList(domain_userid)));
+//                    }
+//
+//                    return out.iterator();
+//                })
+//                .filter(Objects::nonNull)
+//                .reduceByKey((a, b) -> {
+//                    List<String> out = new ArrayList<>();
+//                    out.addAll(a);
+//                    out.addAll(b);
+//
+//                    return out;
+//                })
+        mapping
+                .groupBy("user_id")
+                .agg(collect_set("domain_userid").as("list_domain_userid"))
                 .foreachPartition(t -> {
                     HbaseService hbaseService = new HbaseService();
 
                     while (t.hasNext()) {
-                        Tuple2<Integer, List<String>> tuple2 = t.next();
+                        Row row = t.next();
 
                         try {
-                            int user_id = tuple2._1;
-                            List<String> domainUserIdList = tuple2._2;
+                            int user_id = row.getInt(0);
+                            List<String> domainUserIdList = row.getList(1);
 
                             for (String domain_userid : domainUserIdList) {
                                 System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
