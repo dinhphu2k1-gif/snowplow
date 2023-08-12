@@ -20,6 +20,7 @@ import org.hust.model.event.Event;
 import org.hust.model.event.EventType;
 import org.hust.service.hbase.DomainUserIdList;
 import org.hust.service.hbase.HbaseService;
+import org.hust.service.loader.LoaderService;
 import org.hust.service.mysql.MysqlService;
 import org.hust.utils.HashUtils;
 import org.hust.utils.KafkaUtils;
@@ -125,6 +126,7 @@ public class CollectEventStream implements IJobBuilder {
                 .agg(collect_set("domain_userid").as("list_domain_userid"))
                 .foreachPartition(t -> {
                     HbaseService hbaseService = new HbaseService();
+                    LoaderService loaderService = new LoaderService();
 
                     while (t.hasNext()) {
                         Row row = t.next();
@@ -136,11 +138,7 @@ public class CollectEventStream implements IJobBuilder {
 
                             for (String domain_userid : domainUserIdList) {
                                 System.out.println("user_id: " + user_id + "\tdomain_userid: " + domain_userid);
-
-                                byte[] key = HashUtils.hashPrefixKey(domain_userid);
-                                byte[] value = Bytes.toBytes(user_id);
-
-                                hbaseService.pushMapping(key, value);
+                                loaderService.pushMappingUserId(user_id, domain_userid);
                             }
 
                             // push user_id -> list domain user id

@@ -16,6 +16,21 @@ public class LoaderService {
         hbaseService = new HbaseService();
     }
 
+    public void close() {
+        hbaseService.close();
+    }
+
+    public void pushMapping(int user_id, DomainUserIdList domainUserIdList) {
+
+    }
+
+    public void pushMappingUserId(int user_id, String domain_userid) throws IOException {
+        byte[] key = HashUtils.hashPrefixKey(domain_userid);
+        byte[] value = Bytes.toBytes(user_id);
+
+        hbaseService.pushMapping(key, value);
+    }
+
     public int getMappingUserId(String domain_userid) throws IOException {
         byte[] key = HashUtils.hashPrefixKey(domain_userid);
         byte[] value = hbaseService.getMapping(key);
@@ -33,10 +48,12 @@ public class LoaderService {
     public static void main(String[] args) throws IOException {
         LoaderService loaderService = new LoaderService();
 
-//        System.out.println(loaderService.getMappingUserId("1a6cfa58-9bac-4aae-9fe3-a1c829a1cc03"));
-        DomainUserIdList domainUserIdList = loaderService.getMappingDomainUserId(4545);
+        System.out.println(loaderService.getMappingUserId("00195799-8fb5-4dfe-b911-18989d57cb18"));
+        DomainUserIdList domainUserIdList = loaderService.getMappingDomainUserId(1245);
         for(Map.Entry<String, Long> entry : domainUserIdList.map.entrySet()) {
             System.out.println(entry.getKey() + "\t" + entry.getValue());
         }
+
+        loaderService.close();
     }
 }
