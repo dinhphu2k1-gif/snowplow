@@ -45,7 +45,8 @@ public class InsertEs {
 
         try {
             esClient.index(request, RequestOptions.DEFAULT);
-        } catch (IOException ignore) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
