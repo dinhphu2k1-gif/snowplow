@@ -88,7 +88,6 @@ public class HbaseService {
 
     public static void main(String[] args) throws IOException {
         HbaseService hbaseService = new HbaseService();
-
         hbaseService.createTableMapping(5);
 
         hbaseService.close();

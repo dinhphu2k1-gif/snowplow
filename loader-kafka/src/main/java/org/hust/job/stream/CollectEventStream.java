@@ -120,27 +120,6 @@ public class CollectEventStream implements IJobBuilder {
         System.out.println("num record mapping: " + mapping.count());
         mapping.show(false);
 
-//        mapping.toJavaRDD()
-//                .mapPartitionsToPair(t -> {
-//                    List<Tuple2<Integer, List<String>>> out = new ArrayList<>();
-//                    while (t.hasNext()) {
-//                        Row row = t.next();
-//                        int user_id = Integer.parseInt(row.getString(0));
-//                        String domain_userid = row.getString(1);
-//
-//                        out.add(new Tuple2<>(user_id, Collections.singletonList(domain_userid)));
-//                    }
-//
-//                    return out.iterator();
-//                })
-//                .filter(Objects::nonNull)
-//                .reduceByKey((a, b) -> {
-//                    List<String> out = new ArrayList<>();
-//                    out.addAll(a);
-//                    out.addAll(b);
-//
-//                    return out;
-//                })
         mapping
                 .groupBy("user_id")
                 .agg(collect_set("domain_userid").as("list_domain_userid"))
@@ -149,6 +128,7 @@ public class CollectEventStream implements IJobBuilder {
 
                     while (t.hasNext()) {
                         Row row = t.next();
+                        System.out.println("row: " + row);
 
                         try {
                             int user_id = row.getInt(0);
