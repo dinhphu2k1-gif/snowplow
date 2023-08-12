@@ -16,6 +16,7 @@ import org.hust.model.event.Event;
 import org.hust.model.event.unstruct.IUnstructEvent;
 import org.hust.model.event.unstruct.impl.ProductAction;
 import org.hust.model.event.unstruct.impl.SearchAction;
+import org.hust.service.loader.LoaderService;
 import org.hust.service.mysql.MysqlService;
 import org.hust.utils.DateTimeUtils;
 import org.hust.utils.SparkUtils;
@@ -300,16 +301,18 @@ public class AggregateData {
                 .repartition(20)
                 .mapPartitions((MapPartitionsFunction<Row, Row>) t -> {
                     List<Row> rowList = new ArrayList<>();
-                    MysqlService mysqlService = new MysqlService();
+                    LoaderService loaderService = new LoaderService();
 
                     while (t.hasNext()) {
                         Row row = t.next();
 
                         try {
                             String domain_userid = row.getString(0);
-                            String user_id = String.valueOf(mysqlService.getUserId(domain_userid));
 
-                            if (user_id.equals("-1")) {
+                            String user_id;
+                            try {
+                                user_id = String.valueOf(loaderService.getMappingUserId(domain_userid));
+                            } catch (Exception ignore) {
                                 user_id = domain_userid;
                             }
 

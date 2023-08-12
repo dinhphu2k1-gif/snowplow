@@ -28,4 +28,10 @@ public class LoaderServiceTest extends TestCase {
 
         System.out.println(loaderService.getMappingUserId(domain_userid));
     }
+
+    @Test
+    void getMappingUserId() throws IOException {
+        String domain_userid = "41d43345-99a3-4dde-9f7a-8473f3194c3";
+        System.out.println(loaderService.getMappingUserId(domain_userid));
+    }
 }
